@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Protocol" />
-  <meta name="theme-color" content="#1E2040" />
+  <meta name="theme-color" content="#162844" />
   <meta name="description" content="Fat Loss & Recomp Peptide Protocol Tracker" />
 
   <title>Protocol</title>
@@ -22,7 +22,7 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0; padding: 0;
-      background: #1E2040;
+      background: #162844;
       font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       overscroll-behavior: none;
@@ -43,7 +43,7 @@
       bottom: 0; left: 0; right: 0;
       height: calc(64px + env(safe-area-inset-bottom));
       padding-bottom: env(safe-area-inset-bottom);
-      background: rgba(18,18,22,0.94);
+      background: rgba(16,32,58,0.96);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -74,7 +74,7 @@
     /* ── Hero gradient ── */
     .hero {
       background: radial-gradient(ellipse at 60% 0%, rgba(120,60,220,0.55) 0%, rgba(60,20,120,0.3) 45%, transparent 70%),
-                  linear-gradient(180deg, #1A0A2E 0%, #1E2040 100%);
+                  linear-gradient(180deg, #1A3558 0%, #162844 100%);
       padding: calc(env(safe-area-inset-top) + 20px) 20px 28px;
       position: relative;
       overflow: hidden;
@@ -222,7 +222,7 @@
 
     /* ── Loading ── */
     #loading {
-      position: fixed; inset: 0; background: #1E2040;
+      position: fixed; inset: 0; background: #162844;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 16px;
       z-index: 500; transition: opacity 0.4s;
@@ -478,16 +478,6 @@
       localStorage.setItem('installDismissed', '1');
     });
 
-    // ── Status bar color sync with light/dark mode ────────────────────────────
-    function syncStatusBar() {
-      const isLight = localStorage.getItem('lightMode') === 'true';
-      const meta = document.querySelector('meta[name="theme-color"]');
-      const bar = document.getElementById('pwa-status-bar');
-      if (meta) meta.setAttribute('content', isLight ? '#E8F0F8' : '#131F2E');
-      if (bar) bar.style.background = isLight ? '#E8F0F8' : '#131F2E';
-    }
-    syncStatusBar();
-    window.addEventListener('storage', syncStatusBar);
   </script>
 
   <!-- The full React App -->
@@ -495,7 +485,7 @@
     const { useState, useEffect, useCallback } = React;
 
     const C = {
-      bg: "#1E2040", surface: "rgba(255,255,255,0.07)", card: "#242429", border: "rgba(255,255,255,0.07)",
+      bg: "#162844", surface: "rgba(255,255,255,0.07)", card: "#242429", border: "rgba(255,255,255,0.07)",
       cyan: "#38BDF8", violet: "#A78BFA", green: "#34D399", amber: "#F59E0B",
       rose: "#F87171", teal: "#2DD4BF", text: "#FFFFFF", muted: "rgba(255,255,255,0.75)", dim: "rgba(255,255,255,0.25)",
       purple: "#7C3AED", purpleLight: "#A78BFA",
@@ -821,7 +811,7 @@
 
     // ─── Backup helpers ────────────────────────────────────────────────────────
     const BACKUP_KEYS = [
-      "protocolStartDate","lightMode","readiness","lastHealthSync",
+      "protocolStartDate","readiness","lastHealthSync",
       "orderStatuses","orderSources","suppStatuses","shopStatuses","installDismissed",
     ];
 
@@ -924,9 +914,8 @@
     }
     function Td({children, i, highlight, theme}) {
       const t = theme || C;
-      const isLight = t.bg === "#F0F4F8";
       return <td style={{padding:"9px 12px",fontSize:13,borderBottom:`1px solid ${t.border}`,
-        background:i%2===0?"transparent":isLight?"rgba(0,0,0,0.02)":"rgba(255,255,255,0.015)",verticalAlign:"top",
+        background:i%2===0?"transparent":"rgba(255,255,255,0.015)",verticalAlign:"top",
         color:highlight||t.text}}>{children}</td>;
     }
 
@@ -1485,7 +1474,7 @@
           {/* Search sheet */}
           {showSearch&&(
             <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:2000,display:"flex",alignItems:"flex-end"}} onClick={()=>setShowSearch(false)}>
-              <div style={{background:"#252650",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"80vh",display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}} onClick={e=>e.stopPropagation()}>
+              <div style={{background:"#1E3558",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"80vh",display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}} onClick={e=>e.stopPropagation()}>
                 <div style={{width:40,height:4,borderRadius:2,background:"rgba(255,255,255,0.25)",margin:"12px auto 0"}}/>
                 <div style={{padding:"14px 16px 10px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid rgba(255,255,255,0.1)"}}>
                   <Icon name="calculator" size={16} color="rgba(255,255,255,0.55)"/>
@@ -1850,7 +1839,7 @@
     }
 
     // ─── Fixed header with back button ──────────────────────────────────────────
-    function ScrollHeader({ tab, tabs, lightMode, protocolDay, protocolWeek, protocolStartDate, onBack }) {
+    function ScrollHeader({ tab, tabs, protocolDay, protocolWeek, protocolStartDate, onBack }) {
       const tabInfo = tabs.find(t => t.id === tab);
       const textColor = "#fff";
       const mutedColor = "rgba(255,255,255,0.65)";
@@ -1942,26 +1931,24 @@
       const resetProtocol = () => { setProtocolStartDate(null); LS.set("protocolStartDate",null); };
       const protocolDay = protocolStartDate ? Math.floor((new Date()-new Date(protocolStartDate))/86400000)+1 : null;
       const protocolWeek = protocolDay ? Math.ceil(protocolDay/7) : null;
-      const [lightMode, setLightMode] = useState(() => LS.get("lightMode",false));
-      const toggleLight = () => setLightMode(p=>{LS.set("lightMode",!p);window.dispatchEvent(new Event('storage'));return !p;});
 
       const T = {
-        bg:"#1E2040", surface:"#161628", card:"rgba(255,255,255,0.07)", border:"rgba(255,255,255,0.12)",
+        bg:"#162844", surface:"#1A3050", card:"rgba(255,255,255,0.07)", border:"rgba(255,255,255,0.12)",
         cyan:"#38BDF8", violet:"#818CF8", green:"#34D399", amber:"#F59E0B",
         rose:"#F87171", teal:"#2DD4BF", text:"#FFFFFF", muted:"rgba(255,255,255,0.75)", dim:"rgba(255,255,255,0.12)",
         purple:"#6366F1", purpleLight:"#818CF8",
         // extended palette
-        cardSolid:"#252650", navyLight:"#1E1E3A",
+        cardSolid:"#1E3558", navyLight:"#1E1E3A",
       };
 
       // Sync body background
-      useEffect(() => { document.body.style.background = "#1E2040"; }, []);
+      useEffect(() => { document.body.style.background = "#162844"; }, []);
 
       const check = (k) => setChk(p=>{const next={...p,[k]:!p[k]};const today=new Date().toISOString().split("T")[0];LS.set(`chk-${today}`,next);return next;});
       const toggle = i => setOpen(p=>({...p,[i]:!p[i]}));
 
       const s = {
-        app:{fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",background:"#1E2040",minHeight:"100vh",color:"#fff"},
+        app:{fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",background:"#162844",minHeight:"100vh",color:"#fff"},
         bk:(col)=>({background:"rgba(255,255,255,0.07)",border:`1px solid rgba(255,255,255,0.06)`,borderLeft:`3px solid ${col}`,borderRadius:14,marginBottom:10,overflow:"hidden"}),
         bkH:(col,o)=>({display:"flex",alignItems:"center",gap:10,padding:"14px 16px",cursor:"pointer",background:o?"rgba(255,255,255,0.02)":"transparent",transition:"background 0.15s",WebkitTapHighlightColor:"transparent"}),
         timetag:(col)=>({background:`${col}22`,color:col,border:`1px solid ${col}44`,fontSize:13,fontWeight:700,letterSpacing:"0.06em",padding:"3px 9px",borderRadius:20,whiteSpace:"nowrap"}),
@@ -1998,7 +1985,7 @@
                       background:isToday&&isSel?"#fff":isSel?"rgba(255,255,255,0.25)":"transparent",
                       transition:"all 0.15s"
                     }}>
-                      <span style={{fontSize:15,fontWeight:isToday?700:500,color:isToday&&isSel?"#1E2040":isSel?"#fff":isToday?"#fff":"rgba(255,255,255,0.75)"}}>{date}</span>
+                      <span style={{fontSize:15,fontWeight:isToday?700:500,color:isToday&&isSel?"#162844":isSel?"#fff":isToday?"#fff":"rgba(255,255,255,0.75)"}}>{date}</span>
                     </div>
                     {/* Injection dot indicator */}
                     <div style={{height:3,width:24,borderRadius:2,
@@ -2522,7 +2509,7 @@
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:9}}>
                         <div style={{width:7,height:7,borderRadius:"50%",background:sc,flexShrink:0}}/>
-                        <span style={{fontSize:15,fontWeight:600,color:"#fff"}}>{o.name}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:"#fff"}}>{o.name}</span>
                       </div>
                       <span style={{fontSize:13,fontWeight:600,color:T.green}}>{o.cost}</span>
                     </div>
@@ -2552,7 +2539,7 @@
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
                       <div style={{display:"flex",alignItems:"center",gap:9}}>
                         <div style={{width:7,height:7,borderRadius:"50%",background:sc,flexShrink:0}}/>
-                        <span style={{fontSize:15,fontWeight:600,color:"#fff"}}>{ls.name}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:"#fff"}}>{ls.name}</span>
                       </div>
                       <span style={{fontSize:13,fontWeight:600,color:T.green}}>{ls.cost}</span>
                     </div>
@@ -2657,12 +2644,12 @@
 
       return (
         <div
-          style={{background:"#1E2040", minHeight:"100vh", color:"#fff"}}>
+          style={{background:"#162844", minHeight:"100vh", color:"#fff"}}>
 
           {/* Hero header — only on Today tab */}
           {tab === "daily" && !showMore && (
             <div style={{
-              background: "radial-gradient(ellipse 140% 100% at 50% -20%, rgba(99,102,241,0.6) 0%, rgba(67,56,202,0.35) 40%, rgba(26,27,53,0) 70%), linear-gradient(180deg, #1A1A3E 0%, #1E2040 60%)",
+              background: "radial-gradient(ellipse 140% 100% at 50% -20%, rgba(14,116,212,0.5) 0%, rgba(23,80,160,0.3) 40%, rgba(22,40,68,0) 70%), linear-gradient(180deg, #1A3558 0%, #162844 60%)",
               padding:`calc(env(safe-area-inset-top) + 24px) 22px 26px`,
               position:"relative"
             }}>
@@ -2709,7 +2696,6 @@
             <ScrollHeader
               tab={tab}
               tabs={TABS}
-              lightMode={lightMode}
               protocolDay={protocolDay}
               protocolWeek={protocolWeek}
               protocolStartDate={protocolStartDate}
@@ -2738,7 +2724,7 @@
 
           {/* More sheet */}
           {showMore && (
-            <div style={{padding:`calc(env(safe-area-inset-top) + 20px) 0 20px`, background:"#1E2040", minHeight:"100vh", overscrollBehavior:"none"}}>
+            <div style={{padding:`calc(env(safe-area-inset-top) + 20px) 0 20px`, background:"#162844", minHeight:"100vh", overscrollBehavior:"none"}}>
               <div style={{}}>
               <div style={{padding:"0 20px 16px"}}></div>
 
@@ -2753,36 +2739,13 @@
                 ))}
               </div>
 
-              {/* Appearance toggle */}
-              <div style={{background:"rgba(255,255,255,0.07)",borderRadius:16,margin:"0 16px 16px",border: "1px solid rgba(255,255,255,0.06)",overflow:"hidden"}}>
-                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px"}}>
-                  <div style={{width:34,height:34,borderRadius:9,background:"rgba(251,191,36,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>
-                    <Icon name="appearance" size={18} color="#F59E0B"/>
-                  </div>
-                  <div style={{flex:1,fontSize:15,fontWeight:500,color:"#fff"}}>
-                    {lightMode ? "Dark Mode" : "Light Mode"}
-                  </div>
-                  {/* iOS-style toggle */}
-                  <div onClick={toggleLight} style={{
-                    width:51,height:31,borderRadius:16,cursor:"pointer",
-                    background: lightMode?"#7C3AED":"rgba(255,255,255,0.35)",
-                    position:"relative",transition:"background 0.25s",flexShrink:0
-                  }}>
-                    <div style={{
-                      position:"absolute",top:2,
-                      left: lightMode ? "calc(100% - 29px)" : "2px",
-                      width:27,height:27,borderRadius:"50%",background:"#fff",
-                      transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"
-                    }}/>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Protocol status */}
               {protocolStartDate && (
                 <div style={{background:"rgba(255,255,255,0.07)",borderRadius:16,margin:"0 16px",border: "1px solid rgba(255,255,255,0.06)",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div>
-                    <div style={{fontSize:13,color: lightMode?"rgba(0,0,0,0.4)":"rgba(255,255,255,0.65)"}}>Active Protocol</div>
+                    <div style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>Active Protocol</div>
                     <div style={{fontSize:15,fontWeight:600,color:"#A78BFA",marginTop:2}}>Day {protocolDay} · Week {protocolWeek} of 20</div>
                   </div>
                   <button onClick={resetProtocol} style={{background:"rgba(248,113,113,0.12)",border:"none",borderRadius:8,padding:"7px 13px",fontSize:13,fontWeight:600,color:"#F87171",cursor:"pointer"}}>Reset</button>
