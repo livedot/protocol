@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,9 +14,11 @@
   <title>Protocol</title>
 
   <!-- PWA Manifest inline via JS -->
+
   <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Fat+Loss+%26+Recomp+Protocol%22%2C%22short_name%22%3A%22Protocol%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230F1923%22%2C%22theme_color%22%3A%22%230F1923%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%2520viewBox%253D'0%25200%2520192%2520192'%253E%253Crect%2520width%253D'192'%2520height%253D'192'%2520rx%253D'40'%2520fill%253D'%25230F1923'%252F%253E%253Ctext%2520x%253D'50%2525'%2520y%253D'55%2525'%2520font-size%253D'120'%2520text-anchor%253D'middle'%2520dominant-baseline%253D'middle'%253E%25E2%259A%25A1%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
 
   <!-- Apple touch icons (inline SVG as data URI) -->
+
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230F1923'/><text x='50%25' y='55%25' font-size='110' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>" />
 
   <style>
@@ -355,6 +358,7 @@
     }
 
   </style>
+
 </head>
 <body>
   <div id="pwa-status-bar"></div>
@@ -365,6 +369,7 @@
   <div id="root"></div>
 
   <!-- Install banner -->
+
   <div id="install-banner">
     <div class="ib-icon">⚡</div>
     <div class="ib-text">
@@ -376,6 +381,7 @@
   </div>
 
   <!-- iOS install overlay -->
+
   <div id="ios-install">
     <div class="ios-overlay-card">
       <div class="ios-title">📱 Add to Home Screen</div>
@@ -388,11 +394,15 @@
   </div>
 
   <!-- React + Babel via CDN -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 
   <!-- PWA & Install Logic -->
+
   <script>
     // ── Service Worker Registration ──────────────────────────────────────────
     if ('serviceWorker' in navigator) {
@@ -481,6 +491,7 @@
   </script>
 
   <!-- The full React App -->
+
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
 
@@ -806,7 +817,121 @@
       {id:"exit",     label:"Taper Off",   icon:"exit"},
       {id:"orders",   label:"Inventory",   icon:"inventory"},
       {id:"tools",    label:"Calculator",  icon:"calculator"},
+      {id:"diet",     label:"Diet",        icon:"meal"},
       {id:"backup",   label:"Backup",      icon:"backup"},
+    ];
+
+    // ─── Diet Plan Data ────────────────────────────────────────────────────────
+    const DIET_MEALS = [
+      {
+        id:"m1", time:"9:30 AM", label:"Meal 1 — Break Fast",
+        icon:"coffee", color:"#38BDF8",
+        note:"First meal after training and AOD window. High protein, low carb. Keep insulin low.",
+        macros:{p:40,f:20,c:2,cal:350},
+        supps:["TUDCA 250–500mg","Omega-3 2g EPA/DHA","P-5-P 50–100mg","Digestive Enzymes","Vitamin D3+K2"],
+        options:[
+          {
+            label:"Option A — Eggs + Whites",
+            items:[
+              {name:"3 whole eggs",p:18,f:15,c:1,cal:209},
+              {name:"200ml egg whites",p:22,f:0,c:1,cal:96},
+              {name:"1 tsp olive oil / butter",p:0,f:5,c:0,cal:45},
+            ]
+          },
+          {
+            label:"Option B — Eggs + Shake",
+            items:[
+              {name:"3 whole eggs",p:18,f:15,c:1,cal:209},
+              {name:"1 scoop protein in water",p:24,f:3,c:5,cal:150},
+            ]
+          },
+        ]
+      },
+      {
+        id:"m2", time:"12:00–2:00 PM", label:"Meal 2 — Lunch / Stew",
+        icon:"meal", color:"#34D399",
+        note:"Your biggest protein hit. Beef or chicken stew. Keep carbs low here — save them for dinner.",
+        macros:{p:63,f:12,c:12,cal:415},
+        supps:["Digestive Enzymes"],
+        options:[
+          {
+            label:"Option A — Beef Stew",
+            items:[
+              {name:"250g lean beef (chuck/topside)",p:62,f:12,c:0,cal:355},
+              {name:"200g mixed veg (carrot, celery, onion)",p:3,f:0,c:12,cal:60},
+            ]
+          },
+          {
+            label:"Option B — Chicken Stew",
+            items:[
+              {name:"300g chicken thigh (skin off)",p:57,f:15,c:0,cal:369},
+              {name:"200g mixed veg",p:3,f:0,c:12,cal:60},
+            ]
+          },
+          {
+            label:"Option C — Chicken Breast Stew",
+            items:[
+              {name:"300g chicken breast",p:69,f:5,c:0,cal:320},
+              {name:"200g mixed veg",p:3,f:0,c:12,cal:60},
+            ]
+          },
+        ]
+      },
+      {
+        id:"m3", time:"5:00–6:30 PM", label:"Meal 3 — Dinner (Carb Meal)",
+        icon:"meal", color:"#F59E0B",
+        note:"Carbs go here with Dihydroberberine. Must finish by 6:30 PM — needs 2+ hrs before evening injection at 9 PM.",
+        macros:{p:51,f:9,c:49,cal:481},
+        supps:["Dihydroberberine 200mg","Omega-3 2g EPA/DHA","Digestive Enzymes"],
+        options:[
+          {
+            label:"Option A — Chicken + Rice",
+            items:[
+              {name:"200g chicken breast",p:46,f:4,c:0,cal:220},
+              {name:"150g cooked white rice",p:3,f:0,c:41,cal:176},
+              {name:"100g mixed veg + 1 tsp oil",p:2,f:5,c:8,cal:85},
+            ]
+          },
+          {
+            label:"Option B — Beef Mince + Sweet Potato",
+            items:[
+              {name:"200g lean beef mince (5% fat)",p:46,f:10,c:0,cal:274},
+              {name:"200g sweet potato (cooked)",p:2,f:0,c:40,cal:168},
+              {name:"100g veg",p:2,f:0,c:8,cal:40},
+            ]
+          },
+          {
+            label:"Option C — Salmon + Rice",
+            items:[
+              {name:"200g salmon",p:40,f:14,c:0,cal:290},
+              {name:"150g cooked rice",p:3,f:0,c:41,cal:176},
+              {name:"100g veg",p:2,f:0,c:8,cal:40},
+            ]
+          },
+        ]
+      },
+      {
+        id:"m4", time:"8:00–8:30 PM", label:"Protein Shake (Gap Filler)",
+        icon:"pill", color:"#818CF8",
+        note:"Only if short on protein. Water only — no milk. Digests fast enough to clear before 9 PM injection.",
+        macros:{p:36,f:4,c:7,cal:225},
+        supps:[],
+        options:[
+          {
+            label:"1.5 Scoops Whey in Water",
+            items:[
+              {name:"1.5 scoops protein powder in water",p:36,f:4,c:7,cal:225},
+            ]
+          },
+          {
+            label:"1 Scoop + Egg Whites",
+            items:[
+              {name:"1 scoop protein powder",p:24,f:3,c:5,cal:150},
+              {name:"150ml egg whites",p:16,f:0,c:1,cal:72},
+            ]
+          },
+        ]
+      },
     ];
 
     // ─── Backup helpers ────────────────────────────────────────────────────────
@@ -2590,15 +2715,172 @@
         );
       };
 
-            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,backup:()=><BackupTab theme={T}/>};
+      const renderDiet = () => {
+        const totalP = DIET_MEALS.reduce((s,m)=>s+m.macros.p,0);
+        const totalC = DIET_MEALS.reduce((s,m)=>s+m.macros.c,0);
+        const totalF = DIET_MEALS.reduce((s,m)=>s+m.macros.f,0);
+        const totalCal = DIET_MEALS.reduce((s,m)=>s+m.macros.cal,0);
+        const toggleDiet = (id) => setDietOpen(p=>({...p,[id]:!p[id]}));
+        const Chevron = ({open}) => (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:open?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
+            <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        );
+        return (
+          <div style={{padding:"16px"}}>
+
+            {/* Daily targets */}
+            <SectionLabel>DAILY TARGETS</SectionLabel>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:20}}>
+              {[
+                {label:"Protein",val:`${totalP}g`,color:T.cyan},
+                {label:"Fat",val:`${totalF}g`,color:T.amber},
+                {label:"Carbs",val:`${totalC}g`,color:T.green},
+                {label:"Calories",val:`${totalCal}`,color:T.muted},
+              ].map((s,i)=>(
+                <div key={i} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
+                  <div style={{fontSize:17,fontWeight:700,color:s.color,marginBottom:2}}>{s.val}</div>
+                  <div style={{fontSize:13,color:T.muted}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Eating window */}
+            <SectionLabel>EATING WINDOW</SectionLabel>
+            <Card style={{marginBottom:20,padding:"14px 16px"}}>
+              <div style={{fontSize:13,color:T.muted,lineHeight:1.7}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{color:T.text,fontWeight:600}}>Fast until 9:30 AM</span>
+                  <span>Protects 5:30 + 7:30 AM injections</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{color:T.text,fontWeight:600}}>Stop eating by 6:30 PM</span>
+                  <span>Clears for 9 PM GH injection</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between"}}>
+                  <span style={{color:T.text,fontWeight:600}}>Shake allowed 8–8:30 PM</span>
+                  <span>Water only — digests in time</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Meals */}
+            <SectionLabel>MEALS</SectionLabel>
+            {DIET_MEALS.map(meal=>{
+              const isOpen = !!dietOpen[meal.id];
+              return (
+                <Card key={meal.id} style={{marginBottom:10}}>
+                  {/* Meal header */}
+                  <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                    <div style={{width:38,height:38,borderRadius:10,background:`${meal.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <Icon name={meal.icon} size={18} color={meal.color}/>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:15,fontWeight:600,color:T.text,marginBottom:2}}>{meal.label}</div>
+                      <div style={{fontSize:13,color:meal.color,fontWeight:600}}>{meal.time}</div>
+                    </div>
+                    <div style={{textAlign:"right",marginRight:8,flexShrink:0}}>
+                      <div style={{fontSize:15,fontWeight:700,color:T.cyan}}>{meal.macros.p}g P</div>
+                      <div style={{fontSize:13,color:T.muted}}>{meal.macros.cal} cal</div>
+                    </div>
+                    <Chevron open={isOpen}/>
+                  </div>
+
+                  {isOpen&&(
+                    <div style={{borderTop:`1px solid ${T.border}`}}>
+                      {/* Note */}
+                      <div style={{padding:"10px 16px",background:`${meal.color}0f`,fontSize:13,color:T.muted,lineHeight:1.55}}>
+                        {meal.note}
+                      </div>
+
+                      {/* Macro bar */}
+                      <div style={{padding:"12px 16px",borderTop:`1px solid ${T.border}`}}>
+                        <div style={{display:"flex",gap:12,marginBottom:8}}>
+                          {[
+                            {l:"P",v:meal.macros.p+"g",c:T.cyan},
+                            {l:"F",v:meal.macros.f+"g",c:T.amber},
+                            {l:"C",v:meal.macros.c+"g",c:T.green},
+                            {l:"kcal",v:meal.macros.cal,c:T.muted},
+                          ].map((m,i)=>(
+                            <div key={i} style={{flex:1,textAlign:"center",background:T.card,borderRadius:8,padding:"6px 4px"}}>
+                              <div style={{fontSize:13,fontWeight:700,color:m.c}}>{m.v}</div>
+                              <div style={{fontSize:13,color:T.muted}}>{m.l}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Options */}
+                      {meal.options.map((opt,oi)=>{
+                        const optKey = `${meal.id}-opt${oi}`;
+                        const optOpen = !!dietOpen[optKey];
+                        const optP = opt.items.reduce((s,it)=>s+it.p,0);
+                        const optCal = opt.items.reduce((s,it)=>s+it.cal,0);
+                        return (
+                          <div key={oi} style={{borderTop:`1px solid ${T.border}`}}>
+                            <div onClick={()=>setDietOpen(p=>({...p,[optKey]:!p[optKey]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                              <div style={{width:6,height:6,borderRadius:"50%",background:meal.color,flexShrink:0}}/>
+                              <span style={{flex:1,fontSize:15,fontWeight:500,color:T.text}}>{opt.label}</span>
+                              <span style={{fontSize:13,color:T.cyan,fontWeight:600,marginRight:6}}>{optP}g P · {optCal} cal</span>
+                              <Chevron open={optOpen}/>
+                            </div>
+                            {optOpen&&(
+                              <div style={{paddingBottom:8}}>
+                                {opt.items.map((item,ii)=>(
+                                  <div key={ii} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 16px 8px 28px",borderTop:ii>0?`1px solid ${T.border}`:"none"}}>
+                                    <div style={{flex:1,fontSize:13,color:T.text}}>{item.name}</div>
+                                    <div style={{display:"flex",gap:8,flexShrink:0}}>
+                                      <span style={{fontSize:13,color:T.cyan,fontWeight:600}}>{item.p}g P</span>
+                                      <span style={{fontSize:13,color:T.muted}}>{item.cal} cal</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Supps */}
+                      {meal.supps.length>0&&(
+                        <div style={{borderTop:`1px solid ${T.border}`,padding:"10px 16px"}}>
+                          <div style={{fontSize:13,fontWeight:700,color:T.muted,letterSpacing:"0.06em",marginBottom:6}}>TAKE WITH THIS MEAL</div>
+                          {meal.supps.map((s,i)=>(
+                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                              <div style={{width:5,height:5,borderRadius:"50%",background:T.green,flexShrink:0}}/>
+                              <span style={{fontSize:13,color:T.muted}}>{s}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+
+            {/* Sunday refeed note */}
+            <SectionLabel style={{marginTop:20}}>SUNDAY REFEED</SectionLabel>
+            <Card style={{padding:"14px 16px"}}>
+              <div style={{fontSize:13,color:T.muted,lineHeight:1.65}}>
+                <div style={{fontSize:15,fontWeight:600,color:T.amber,marginBottom:6}}>2× Carbs · 2 Meals (Trigili)</div>
+                Add 200g rice or potato to Meal 2. Skip Meal 3. Resets leptin and glycogen. Prevents adaptive metabolic slowdown at week 8+.
+              </div>
+            </Card>
+
+          </div>
+        );
+      };
+
+            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,backup:()=><BackupTab theme={T}/>};
 
       // Bottom tab bar config
       const PRIMARY_TABS = [
-        {id:"daily",   label:"Today",      icon:"today"},
-        {id:"orders",  label:"Inventory",  icon:"inventory"},
-        {id:"tools",   label:"Calculator", icon:"calculator"},
-        {id:"synergy", label:"Stack",      icon:"stack"},
-        {id:"more",    label:"More",       icon:"more"},
+        {id:"daily",    label:"Today",      icon:"today"},
+        {id:"diet",     label:"Diet",       icon:"meal"},
+        {id:"blending", label:"Blending",   icon:"blending"},
+        {id:"tools",    label:"Calculator", icon:"calculator"},
+        {id:"more",     label:"More",       icon:"more"},
       ];
       const MORE_TABS = TABS.filter(t => !PRIMARY_TABS.find(p => p.id === t.id));
 
@@ -2620,6 +2902,7 @@
       const [expandedLayers, setExpandedLayers] = useState({});
       const [suppOpen, setSuppOpen] = useState(false);
       const [dailySuppOpen, setDailySuppOpen] = useState(false);
+      const [dietOpen, setDietOpen] = useState({});
 
 
       const activeTab = showMore ? "more" : tab;
@@ -2778,5 +3061,6 @@
       if (loading) { loading.classList.add('hide'); setTimeout(() => loading.remove(), 400); }
     }, 800);
   </script>
+
 </body>
 </html>
