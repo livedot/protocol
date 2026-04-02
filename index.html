@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -14,11 +13,9 @@
   <title>Protocol</title>
 
   <!-- PWA Manifest inline via JS -->
-
   <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Fat+Loss+%26+Recomp+Protocol%22%2C%22short_name%22%3A%22Protocol%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230F1923%22%2C%22theme_color%22%3A%22%230F1923%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%2520viewBox%253D'0%25200%2520192%2520192'%253E%253Crect%2520width%253D'192'%2520height%253D'192'%2520rx%253D'40'%2520fill%253D'%25230F1923'%252F%253E%253Ctext%2520x%253D'50%2525'%2520y%253D'55%2525'%2520font-size%253D'120'%2520text-anchor%253D'middle'%2520dominant-baseline%253D'middle'%253E%25E2%259A%25A1%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
 
   <!-- Apple touch icons (inline SVG as data URI) -->
-
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230F1923'/><text x='50%25' y='55%25' font-size='110' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>" />
 
   <style>
@@ -358,7 +355,6 @@
     }
 
   </style>
-
 </head>
 <body>
   <div id="pwa-status-bar"></div>
@@ -369,7 +365,6 @@
   <div id="root"></div>
 
   <!-- Install banner -->
-
   <div id="install-banner">
     <div class="ib-icon">⚡</div>
     <div class="ib-text">
@@ -381,7 +376,6 @@
   </div>
 
   <!-- iOS install overlay -->
-
   <div id="ios-install">
     <div class="ios-overlay-card">
       <div class="ios-title">📱 Add to Home Screen</div>
@@ -393,16 +387,90 @@
     </div>
   </div>
 
+  <!-- Firebase SDKs via cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+
   <!-- React + Babel via CDN -->
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 
-  <!-- PWA & Install Logic -->
+  <!-- Firebase Init + Cloud Sync Layer -->
+  <script>
+    // ── Always initialize these globals first so app never crashes ──────────
+    window._fbUid     = null;
+    window._fbReady   = false;
+    window._fbOnReady = [];
+    window._fbSet     = function() {};  // no-op until Firebase loads
+    window._fbPull    = async function() {};  // no-op until Firebase loads
 
+    function _fbEmitReady() {
+      window._fbReady = true;
+      (window._fbOnReady || []).forEach(fn => { try { fn(); } catch(e){} });
+      window._fbOnReady = [];
+    }
+
+    try {
+      if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
+
+      const _fbConfig = {
+        apiKey: "AIzaSyB_7gBbtMjRmW5O-X6_5PMxYjuRmE5ZUkk",
+        authDomain: "protocol-pwa.firebaseapp.com",
+        projectId: "protocol-pwa",
+        storageBucket: "protocol-pwa.firebasestorage.app",
+        messagingSenderId: "1029218717235",
+        appId: "1:1029218717235:web:3b0277f7467bc090cfdd46"
+      };
+      firebase.initializeApp(_fbConfig);
+      const _auth = firebase.auth();
+      const _db   = firebase.firestore();
+
+      window._fbSet = function(key, value) {
+        if (!window._fbUid) return;
+        const isChk = key.startsWith('chk-');
+        const col   = isChk ? 'checklist' : 'data';
+        const docId = isChk ? key.replace('chk-', '') : key;
+        _db.collection('users').doc(window._fbUid)
+           .collection(col).doc(docId)
+           .set({ v: value })
+           .catch(function() {});
+      };
+
+      window._fbPull = async function(uid) {
+        try {
+          const [dataSnap, chkSnap] = await Promise.all([
+            _db.collection('users').doc(uid).collection('data').get(),
+            _db.collection('users').doc(uid).collection('checklist').get(),
+          ]);
+          dataSnap.forEach(function(doc) {
+            try { localStorage.setItem(doc.id, JSON.stringify(doc.data().v)); } catch(e) {}
+          });
+          chkSnap.forEach(function(doc) {
+            try { localStorage.setItem('chk-' + doc.id, JSON.stringify(doc.data().v)); } catch(e) {}
+          });
+        } catch(e) { console.warn('Firebase pull failed:', e); }
+      };
+
+      // Anonymous sign-in
+      _auth.signInAnonymously().then(async function(cred) {
+        window._fbUid = cred.user.uid;
+        try { localStorage.setItem('_fbUid', cred.user.uid); } catch(e) {}
+        await window._fbPull(window._fbUid);
+        _fbEmitReady();
+      }).catch(function() {
+        console.warn('Firebase auth failed — running offline');
+        _fbEmitReady();
+      });
+
+    } catch(e) {
+      console.warn('Firebase unavailable:', e.message, '— running offline with localStorage only');
+      _fbEmitReady();  // unblock the app
+    }
+  </script>
+
+  <!-- PWA & Install Logic -->
   <script>
     // ── Service Worker Registration ──────────────────────────────────────────
     if ('serviceWorker' in navigator) {
@@ -491,7 +559,6 @@
   </script>
 
   <!-- The full React App -->
-
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
 
@@ -504,7 +571,11 @@
 
     const LS = {
       get: (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } },
-      set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+      set: (k, v) => {
+        try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
+        // Mirror to Firestore
+        if (window._fbUid) window._fbSet(k, v);
+      },
     };
 
     // ─── SVG Icon System ──────────────────────────────────────────────────────────
@@ -560,14 +631,14 @@
 
     const WEEKLY_INJECTIONS = {
       1: [
-        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose},
-        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Systemic tissue repair, anti-inflammatory, recovery",color:C.teal},
+        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Systemic tissue repair, anti-inflammatory, connective tissue recovery. Pairs with BPC-157 — BPC handles local/gut repair, TB-500 handles systemic.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       3: [
-        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Mid-week repair dose — connective tissue + anti-inflammatory",color:C.teal},
+        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Mid-week systemic repair dose — maintains connective tissue anti-inflammatory effect between Monday and Friday injections.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       5: [
-        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Second weekly dose — maintains triple agonist activity",color:C.rose},
+        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
       ],
       0: [], 2: [], 4: [], 6: [],
     };
@@ -587,69 +658,78 @@
       { time:"5:30 AM", label:"Pre-Training — Fasted", icon:"inject", color:C.green, timeHour:5,
         blend:"Mots-c + Selank → one syringe. L-Carnitine standalone — separate injection. Draw 21g, swap to 29–30g to inject.",
         items:[
-          {name:"Mots-c",dose:"5mg",method:"SubQ/IM",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false},
-          {name:"Selank",dose:"100–200mcg",method:"SubQ",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false},
-          {name:"L-Carnitine",dose:"500mg–1g",method:"SubQ/IM",purpose:"Shuttles mobilized fatty acids into mitochondria — maximizes fat oxidation during fasted training",t:false},
+          {name:"Mots-c",dose:"5mg",method:"SubQ/IM",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
+          {name:"Selank",dose:"100–200mcg",method:"SubQ",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
+          {name:"L-Carnitine",dose:"500mg–1g",method:"SubQ/IM",purpose:"Shuttles mobilized fatty acids into mitochondria — maximizes fat oxidation during fasted training",t:false,cycle:{type:"daily"}},
         ]},
       { time:"6:00 AM", label:"Training — Fasted", icon:"train", color:C.amber, timeHour:6, blend:null,
         items:[
-          {name:"Electrolyte Cocktail",dose:"5g Na / 1g K / 500mg Mg per L",method:"Drink",purpose:"These peptides act as diuretics — if you're flat and weak it's a mineral deficiency, not a calorie deficiency",t:true},
+          {name:"Electrolyte Cocktail",dose:"5g Na / 1g K / 500mg Mg per L",method:"Drink",purpose:"These peptides act as diuretics — if you're flat and weak it's a mineral deficiency, not a calorie deficiency",t:true,cycle:{type:"daily"}},
         ]},
       { time:"7:30 AM", label:"Post-Training — Before Coffee", icon:"sun", color:C.amber, timeHour:8,
-        blend:"AOD + BPC-157 + KPV + 5-Amino-1MQ → one syringe. NAC + Astragalus oral.",
+        blend:"AOD + BPC-157 + KPV + GHK-Cu + 5-Amino-1MQ → one syringe. NAC + Astragalus oral.",
         items:[
-          {name:"AOD-9604",dose:"300mcg",method:"SubQ",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false},
-          {name:"BPC-157",dose:"250–500mcg",method:"SubQ",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false},
-          {name:"KPV",dose:"500mcg–1mg",method:"SubQ",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false},
-          {name:"5-Amino-1MQ",dose:"As directed",method:"SubQ",purpose:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",t:false},
-          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true},
-          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true},
+          {name:"AOD-9604",dose:"300mcg",method:"SubQ",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false,cycle:{type:"daily"}},
+          {name:"BPC-157",dose:"250–500mcg",method:"SubQ",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false,cycle:{type:"weeks",on:6,off:3,note:"6 wks on / 3 wks off"}},
+          {name:"KPV",dose:"500mcg–1mg",method:"SubQ",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
+          {name:"GHK-Cu",dose:"1–2mg",method:"SubQ",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
+          {name:"5-Amino-1MQ",dose:"50mg",method:"SubQ",purpose:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
+          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true,cycle:{type:"daily"}},
         ]},
       { time:"9:00–10:00 AM", label:"First Coffee", icon:"coffee", color:C.amber, timeHour:9, blend:null,
         items:[
-          {name:"Vitamin D3 + K2",dose:"10,000 IU",method:"With coffee",purpose:"Maintains testosterone production during a caloric deficit — fat-soluble, take with any fat source",t:false},
+          {name:"Vitamin D3 + K2",dose:"10,000 IU",method:"With coffee",purpose:"Maintains testosterone production during a caloric deficit — fat-soluble, take with any fat source",t:false,cycle:{type:"daily"}},
         ]},
       { time:"Meal 1", label:"Break Fast (Protein + Fiber)", icon:"meal", color:C.teal, timeHour:12, blend:null,
         items:[
-          {name:"TUDCA",dose:"250–500mg",method:"With meal",purpose:"Essential for bile flow — prevents liver sluggishness during rapid fat loss",t:true},
-          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Lowers systemic inflammation — prevents cortisol belly",t:true},
-          {name:"P-5-P (Active B6)",dose:"50–100mg",method:"With meal",purpose:"Keeps prolactin in check — high prolactin causes water retention and a soft look",t:true},
-          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false},
+          {name:"TUDCA",dose:"250–500mg",method:"With meal",purpose:"Essential for bile flow — prevents liver sluggishness during rapid fat loss",t:true,cycle:{type:"daily"}},
+          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Lowers systemic inflammation — prevents cortisol belly",t:true,cycle:{type:"daily"}},
+          {name:"P-5-P (Active B6)",dose:"50–100mg",method:"With meal",purpose:"Keeps prolactin in check — high prolactin causes water retention and a soft look",t:true,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"Meal 2", label:"Dinner (Carbs + Protein)", icon:"meal", color:C.teal, timeHour:17, blend:null,
         items:[
-          {name:"Dihydroberberine",dose:"200mg",method:"With meal",purpose:"Potent GDA — forces glucose into muscle not fat, counters GH-driven insulin resistance",t:true},
-          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Second dose — split across meals for better absorption and sustained anti-inflammatory effect",t:true},
-          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false},
+          {name:"Dihydroberberine",dose:"200mg",method:"With meal",purpose:"Potent GDA — forces glucose into muscle not fat, counters GH-driven insulin resistance",t:true,cycle:{type:"daily"}},
+          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Second dose — split across meals for better absorption and sustained anti-inflammatory effect",t:true,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"2–3 hrs After Dinner", label:"Evening Blend", icon:"moon", color:C.violet, timeHour:20,
         blend:"Tesamorelin + Ipamorelin + DSIP → one syringe. NAC + Astragalus oral.",
         items:[
-          {name:"Tesamorelin",dose:"1–2mg",method:"SubQ",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false},
-          {name:"Ipamorelin",dose:"200–300mcg",method:"SubQ",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false},
-          {name:"DSIP",dose:"100–200mcg",method:"SubQ",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false},
-          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true},
-          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Second daily dose — kidney protection, telomere support",t:true},
+          {name:"Tesamorelin",dose:"1–2mg",method:"SubQ",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false,cycle:{type:"daily"}},
+          {name:"Ipamorelin",dose:"200–300mcg",method:"SubQ",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
+          {name:"DSIP",dose:"100–200mcg",method:"SubQ",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
+          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true,cycle:{type:"daily"}},
+          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Second daily dose — kidney protection, telomere support",t:true,cycle:{type:"daily"}},
         ]},
       { time:"30–60 Min Before Bed", label:"Pre-Sleep", icon:"sleep", color:"#5B4FCF", timeHour:22,
         blend:"Epithalon standalone SubQ. Orals separate.",
         items:[
-          {name:"Epithalon",dose:"5–10mg",method:"SubQ",purpose:"CYCLE 10d on/2–3mo off — pineal restoration, telomere support",t:false},
-          {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false},
-          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false},
-          {name:"Melatonin",dose:"0.5–1mg",method:"Oral",purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse",t:false},
+          {name:"Epithalon",dose:"5–10mg",method:"SubQ",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
+          {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false,cycle:{type:"daily"}},
+          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
+          {name:"Melatonin",dose:"0.5–1mg",method:"Oral",purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse",t:false,cycle:{type:"daily"}},
         ]},
     ];
 
     const BLENDS = [
       {time:"5:30 AM",label:"Pre-Train Blend",icon:"inject",color:C.green,
-       items:["Mots-c — 5mg","Selank — 100–200mcg","L-Carnitine — 500mg–1g (standalone)"],note:"Mots-c + Selank → one syringe. L-Carnitine standalone — separate syringe, DO NOT blend"},
+       items:[{text:"Mots-c — 5mg"},{text:"Selank — 100–200mcg"},{text:"L-Carnitine — 500mg–1g (standalone)"}],note:"Mots-c + Selank → one syringe. L-Carnitine standalone — separate syringe, DO NOT blend"},
       {time:"7:30 AM",label:"Post-Train Blend",icon:"sun",color:C.amber,
-       items:["AOD-9604 — 300mcg","BPC-157 — 250–500mcg","KPV — 500mcg–1mg","5-Amino-1MQ — as directed"],note:"Draw 21g → swap to 29–30g injection needle"},
+       items:[
+         {text:"AOD-9604 — 300mcg"},
+         {text:"BPC-157 — 250–500mcg"},
+         {text:"KPV — 500mcg–1mg"},
+         {text:"GHK-Cu — 1–2mg"},
+         {text:"5-Amino-1MQ — 50mg"},
+         {text:"Retatrutide — 0.5–1mg → 2–4mg", days:["Mon","Fri"], note:"Standalone — separate syringe"},
+         {text:"TB-500 — 2–2.5mg", days:["Mon","Wed"], note:"Standalone — separate syringe"},
+       ],note:"Draw 21g → swap to 29–30g injection needle"},
       {time:"Evening",label:"Evening Blend",icon:"moon",color:C.violet,
-       items:["Tesamorelin — 1–2mg","Ipamorelin — 200–300mcg","DSIP — 100–200mcg"],note:"Draw 21g → swap to 29–30g injection needle"},
+       items:[{text:"Tesamorelin — 1–2mg"},{text:"Ipamorelin — 200–300mcg"},{text:"DSIP — 100–200mcg"}],note:"Draw 21g → swap to 29–30g injection needle"},
       {time:"Pre-Sleep",label:"Epithalon (cycle only)",icon:"sleep",color:"#5B4FCF",
-       items:["Epithalon — 5–10mg"],note:"Standalone — DO NOT blend with other compounds"},
+       items:[{text:"Epithalon — 5–10mg"}],note:"Standalone — DO NOT blend with other compounds"},
     ];
 
     const SUPPLIES = [
@@ -714,6 +794,7 @@
       {layer:"Hormonal Foundation",combo:"TRT",role:"Anabolic anchor; prevents muscle loss as aggressive fat mobilization strips bodyweight. Everything else runs on top of this.",color:C.cyan},
       {layer:"GH Axis",combo:"Tesamorelin + Ipamorelin",role:"Tesamorelin — GHRH analog; FDA-validated specifically for visceral fat elimination. Ipamorelin — clean GHRP; fires the nocturnal GH pulse without raising cortisol or prolactin.",color:C.violet},
       {layer:"Fat Loss",combo:"AOD-9604",role:"C-terminal GH fragment; triggers direct lipolysis without IGF-1 elevation or blood sugar impact. Fasted window only.",color:C.amber},
+      {layer:"Tissue & Recovery",combo:"GHK-Cu",role:"Copper tripeptide; activates collagen synthesis, remodels connective tissue, and drives systemic repair signaling. Synergizes with BPC-157 and KPV in the post-train blend — all three hit the repair window simultaneously. Also documented to upregulate antioxidant enzymes, reducing oxidative load during aggressive fat mobilization.",color:C.teal},
       {layer:"Fat Loss",combo:"Retatrutide",role:"Triple agonist GLP-1/GIP/Glucagon; drives BMR up, kills food noise, and mobilizes fat from liver and adipose simultaneously.",color:C.rose},
       {layer:"Fat Loss",combo:"Mots-c + 5-Amino-1MQ",role:"Mots-c — mitochondrial peptide; activates AMPK and forces metabolic flexibility. 5-Amino-1MQ — NNMT inhibitor; preserves NAD+ in fat cells and shrinks adipocytes.",color:C.green},
       {layer:"Fat Loss",combo:"L-Carnitine",role:"Fatty acid transporter; shuttles mobilized free fatty acids across the mitochondrial membrane so they're actually burned, not re-esterified. Without it, AOD and the GH axis mobilize fat into circulation that never gets oxidized. Injectable pre-training maximizes muscle uptake and hardness.",color:C.teal},
@@ -771,6 +852,8 @@
       {name:"Selank",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$41",status:"covered",src:"Hebei Feisite"},
       {name:"5-Amino-1MQ",spec:"50mg×10",qty:"1",mg:"500mg",cost:"$98",status:"covered",src:"Hebei Feisite"},
       {name:"Bac Water",spec:"10ml×10",qty:"1",mg:"—",cost:"$18",status:"covered",src:"Hebei Feisite"},
+      {name:"GHK-Cu",spec:"50mg×20",qty:"1",mg:"1000mg",cost:"$68",status:"ordered",src:""},
+      {name:"Kisspeptin",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$50",status:"ordered",src:""},
     ];
 
     const LOCAL_SUPPS = [
@@ -828,7 +911,7 @@
         icon:"coffee", color:"#38BDF8",
         note:"First meal after training and AOD window. High protein, low carb. Keep insulin low.",
         macros:{p:40,f:20,c:2,cal:350},
-        supps:["TUDCA 250–500mg","Omega-3 2g EPA/DHA","P-5-P 50–100mg","Digestive Enzymes","Vitamin D3+K2"],
+        supps:[{name:"TUDCA",dose:"250–500mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"P-5-P",dose:"50–100mg"},{name:"Digestive Enzymes",dose:"Protease-heavy"}],
         options:[
           {
             label:"Option A — Eggs + Whites",
@@ -852,7 +935,7 @@
         icon:"meal", color:"#34D399",
         note:"Your biggest protein hit. Beef or chicken stew. Keep carbs low here — save them for dinner.",
         macros:{p:63,f:12,c:12,cal:415},
-        supps:["Digestive Enzymes"],
+        supps:[{name:"Digestive Enzymes",dose:"Protease-heavy"}],
         options:[
           {
             label:"Option A — Beef Stew",
@@ -882,7 +965,7 @@
         icon:"meal", color:"#F59E0B",
         note:"Carbs go here with Dihydroberberine. Must finish by 6:30 PM — needs 2+ hrs before evening injection at 9 PM.",
         macros:{p:51,f:9,c:49,cal:481},
-        supps:["Dihydroberberine 200mg","Omega-3 2g EPA/DHA","Digestive Enzymes"],
+        supps:[{name:"Dihydroberberine",dose:"200mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"Digestive Enzymes",dose:"Protease-heavy"}],
         options:[
           {
             label:"Option A — Chicken + Rice",
@@ -937,7 +1020,7 @@
     // ─── Backup helpers ────────────────────────────────────────────────────────
     const BACKUP_KEYS = [
       "protocolStartDate","readiness","lastHealthSync",
-      "orderStatuses","orderSources","suppStatuses","shopStatuses","installDismissed",
+      "orderStatuses","orderSources","suppStatuses","shopStatuses","installDismissed","invRemaining","savedDoses",
     ];
 
     function collectAllData() {
@@ -1459,10 +1542,12 @@
       {name:"TB-500",     desc:"Systemic anti-inflammatory, connective tissue repair",             recDose:"2",     recUnit:"mg"},
       {name:"Tesamorelin",desc:"GHRH analog — FDA-validated visceral fat, nocturnal GH pulse",    recDose:"2",     recUnit:"mg"},
       {name:"5-Amino-1MQ",desc:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",       recDose:"50",    recUnit:"mg"},
+      {name:"GHK-Cu",      desc:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory", recDose:"1",     recUnit:"mg"},
     ];
 
-    function ReconCalcWizard() {
-      const [step, setStep] = useState(0); // 0=peptide, 1=dose, 2=vial, 3=water, 4=result
+    function ReconCalcWizard({ onSave, savedDoses={} }) {
+      const [step, setStep] = useState(0);
+      const [saved, setSaved] = useState(false);
       const [peptide, setPeptide] = useState(null);
       const [search, setSearch] = useState("");
       const [showSearch, setShowSearch] = useState(false);
@@ -1764,7 +1849,34 @@
             </div>
           </div>
 
-          {ctaBtn("New Calculation", ()=>{setPeptide(null);setStep(0);setDoseStr("");setVialStr("");setWaterMl(2);}, true)}
+          {/* Save result */}
+          {(() => {
+            const alreadySaved = savedDoses[peptide?.name];
+            const isSame = alreadySaved &&
+              alreadySaved.units === parseFloat(unitsPerDose.toFixed(1)) &&
+              alreadySaved.dose === doseStr &&
+              alreadySaved.doseUnit === doseUnit;
+            return (
+              <div onClick={()=>{
+                if(onSave && peptide) {
+                  onSave(peptide.name, {units: parseFloat(unitsPerDose.toFixed(1)), dose: doseStr, doseUnit, vialMg, waterMl});
+                  setSaved(true);
+                  setTimeout(()=>setSaved(false), 2000);
+                }
+              }} style={{
+                padding:"16px", borderRadius:28, textAlign:"center", fontSize:15, fontWeight:600,
+                color: isSame ? "rgba(255,255,255,0.4)" : "#fff",
+                background: saved ? "rgba(52,211,153,0.25)" : isSame ? "rgba(255,255,255,0.06)" : "rgba(52,211,153,0.18)",
+                border: `1px solid ${saved||isSame ? "rgba(52,211,153,0.35)" : "rgba(52,211,153,0.4)"}`,
+                cursor: isSame ? "default" : "pointer",
+                WebkitTapHighlightColor:"transparent", marginBottom:8, transition:"all 0.2s",
+              }}>
+                {saved ? "✓ Saved to Timeline" : isSame ? "✓ Already Saved" : `Save ${unitsPerDose.toFixed(1)}u to Timeline`}
+              </div>
+            );
+          })()}
+
+          {ctaBtn("New Calculation", ()=>{setPeptide(null);setStep(0);setDoseStr("");setVialStr("");setWaterMl(2);setSaved(false);}, true)}
         </div>
       );
     }
@@ -1784,6 +1896,46 @@
         const chkKeys = Object.keys(d.keys).filter(k => k.startsWith("chk-"));
         return { total: Object.keys(d.keys).length, days: chkKeys.length };
       });
+
+      // Cloud sync state
+      const [cloudUid, setCloudUid] = useState(() => localStorage.getItem('_fbUid') || null);
+      const [cloudStatus, setCloudStatus] = useState(window._fbReady ? (window._fbUid ? 'connected' : 'offline') : 'connecting');
+      const [linkCode, setLinkCode] = useState('');
+      const [linkMsg, setLinkMsg] = useState('');
+      const [linking, setLinking] = useState(false);
+
+      useEffect(() => {
+        if (!window._fbReady) {
+          window._fbOnReady.push(() => {
+            setCloudStatus(window._fbUid ? 'connected' : 'offline');
+            setCloudUid(window._fbUid);
+          });
+        }
+      }, []);
+
+      const doLinkDevice = async () => {
+        const code = linkCode.trim();
+        if (!code) return;
+        setLinking(true); setLinkMsg('');
+        try {
+          // Pull data from the entered UID
+          await window._fbPull(code);
+          // Now also write all our local data to the entered UID going forward
+          window._fbUid = code;
+          localStorage.setItem('_fbUid', code);
+          setCloudUid(code);
+          // Push all current local data up to the linked UID
+          const allData = collectAllData();
+          Object.entries(allData.keys).forEach(([k,v]) => {
+            try { window._fbSet(k, JSON.parse(v)); } catch {}
+          });
+          setLinkMsg('✓ Linked! Data merged. Reload the app to sync.');
+          setLinking(false);
+        } catch(e) {
+          setLinkMsg('Failed to link. Check the code and try again.');
+          setLinking(false);
+        }
+      };
 
       const doExport = () => {
         try {
@@ -1855,6 +2007,44 @@
 
       return (
         <div>
+          {/* Cloud Sync Status */}
+          <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>CLOUD SYNC</div>
+          <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
+            <div style={{padding:"14px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                <div style={{width:8,height:8,borderRadius:"50%",flexShrink:0,
+                  background:cloudStatus==="connected"?"#34D399":cloudStatus==="connecting"?"#F59E0B":"#F87171",
+                  boxShadow:cloudStatus==="connected"?"0 0 6px #34D399":cloudStatus==="connecting"?"0 0 6px #F59E0B":"none"
+                }}/>
+                <span style={{fontSize:15,fontWeight:600,color:"#fff"}}>
+                  {cloudStatus==="connected"?"Syncing to Cloud":cloudStatus==="connecting"?"Connecting…":"Offline — Local Only"}
+                </span>
+              </div>
+              {cloudUid&&(
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",fontFamily:"monospace",wordBreak:"break-all",paddingLeft:18}}>
+                  Device ID: {cloudUid}
+                </div>
+              )}
+            </div>
+            {/* Link another device */}
+            <div style={{padding:"14px 16px"}}>
+              <div style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.75)",marginBottom:4}}>Link Another Device</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",marginBottom:10}}>Paste your Device ID from another device to merge and sync data across both.</div>
+              <div style={{display:"flex",gap:8}}>
+                <input
+                  value={linkCode}
+                  onChange={e=>setLinkCode(e.target.value)}
+                  placeholder="Paste Device ID…"
+                  style={{flex:1,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"10px 12px",fontSize:13,color:"#fff",outline:"none",fontFamily:"monospace"}}
+                />
+                <div onClick={doLinkDevice} style={{padding:"10px 16px",background:"rgba(99,102,241,0.7)",borderRadius:10,fontSize:13,fontWeight:600,color:"#fff",cursor:linking?"not-allowed":"pointer",opacity:linking?0.6:1,flexShrink:0,WebkitTapHighlightColor:"transparent"}}>
+                  {linking?"…":"Link"}
+                </div>
+              </div>
+              {linkMsg&&<div style={{fontSize:13,color:linkMsg.startsWith("✓")?"#34D399":"#F87171",marginTop:8}}>{linkMsg}</div>}
+            </div>
+          </div>
+
           {/* What's backed up */}
           <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>BACKED UP DATA</div>
           <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
@@ -2046,6 +2236,64 @@
       const setOrderStatus = (i,val) => setOrderStatuses(p=>{const next={...p,[i]:val};LS.set("orderStatuses",next);return next;});
       const [orderSources, setOrderSources] = useState(() => LS.get("orderSources",ORDERS.reduce((acc,o,i)=>({...acc,[i]:o.src}),{})));
       const setOrderSource = (i,val) => setOrderSources(p=>{const next={...p,[i]:val};LS.set("orderSources",next);return next;});
+
+      // ── Inventory tracking ─────────────────────────────────────────────────
+      // Parse a mg string like "100mg", "5g", "1000mg" → number in mg
+      const parseTotalMg = (mgStr) => {
+        if (!mgStr || mgStr === "—") return null;
+        const s = mgStr.trim().toLowerCase();
+        const n = parseFloat(s);
+        if (isNaN(n)) return null;
+        if (s.endsWith("g") && !s.endsWith("mg")) return n * 1000;
+        return n;
+      };
+      // Parse a dose string like "5mg", "300mcg", "100–200mcg", "500mg–1g" → mg (use lower bound)
+      const parseDoseMg = (doseStr) => {
+        if (!doseStr) return null;
+        const s = doseStr.trim().toLowerCase().split("–")[0].split("-")[0].trim();
+        const n = parseFloat(s);
+        if (isNaN(n)) return null;
+        if (s.includes("mcg")) return n / 1000;
+        if (s.includes("g") && !s.includes("mg")) return n * 1000;
+        return n; // assume mg
+      };
+
+      // invRemaining: {[orderIndex]: remainingMg} — initialized from ORDERS totalMg
+      const [invRemaining, setInvRemaining] = useState(() => {
+        const saved = LS.get("invRemaining", null);
+        if (saved) return saved;
+        const init = {};
+        ORDERS.forEach((o,i) => { const t = parseTotalMg(o.mg); if (t !== null) init[i] = t; });
+        return init;
+      });
+
+      // Deduct or refund dose from inventory by peptide name
+      const adjustInv = (itemName, doseMg, deduct) => {
+        if (!doseMg || doseMg <= 0) return;
+        // Find all order indices matching this name, consume from first with stock
+        const indices = ORDERS.map((o,i)=>({o,i})).filter(({o})=>o.name.toLowerCase()===itemName.toLowerCase());
+        if (!indices.length) return;
+        setInvRemaining(prev => {
+          const next = {...prev};
+          if (deduct) {
+            let remaining = doseMg;
+            for (const {i} of indices) {
+              if (next[i] === undefined) continue;
+              const take = Math.min(next[i], remaining);
+              next[i] = Math.max(0, next[i] - take);
+              remaining -= take;
+              if (remaining <= 0) break;
+            }
+          } else {
+            // Refund: add back to last entry with stock first, or first entry
+            const idx = indices[indices.length-1].i;
+            const total = parseTotalMg(ORDERS[idx].mg) ?? 0;
+            next[idx] = Math.min(total, (next[idx] ?? 0) + doseMg);
+          }
+          LS.set("invRemaining", next);
+          return next;
+        });
+      };
       const [suppStatuses, setSuppStatuses] = useState(() => LS.get("suppStatuses",LOCAL_SUPPS.reduce((acc,ls,i)=>({...acc,[i]:"needed"}),{})));
       const setSuppStatus = (i,val) => setSuppStatuses(p=>{const next={...p,[i]:val};LS.set("suppStatuses",next);return next;});
       const [shopStatuses, setShopStatuses] = useState(() => LS.get("shopStatuses",SHOPPING_LIST.reduce((acc,item,i)=>({...acc,[i]:"needed"}),{})));
@@ -2069,7 +2317,15 @@
       // Sync body background
       useEffect(() => { document.body.style.background = "#162844"; }, []);
 
-      const check = (k) => setChk(p=>{const next={...p,[k]:!p[k]};const today=new Date().toISOString().split("T")[0];LS.set(`chk-${today}`,next);return next;});
+      const check = (k, itemName, doseMg) => setChk(p=>{
+        const wasChecked = !!p[k];
+        const next={...p,[k]:!p[k]};
+        const today=new Date().toISOString().split("T")[0];
+        LS.set(`chk-${today}`,next);
+        // Sync inventory if this is a named compound with a dose
+        if (itemName && doseMg) adjustInv(itemName, doseMg, !wasChecked);
+        return next;
+      });
       const toggle = i => setOpen(p=>({...p,[i]:!p[i]}));
 
       const s = {
@@ -2126,42 +2382,293 @@
         );
       };
 
+      // ── Unit tag helper — shows saved draw units next to a compound name ──
+      const unitFor = (name) => savedDoses[name]?.units ?? null;
+      const UnitTag = ({name}) => {
+        const u = unitFor(name);
+        if (!u) return null;
+        return (
+          <span style={{fontSize:11,fontWeight:700,color:"#A78BFA",background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.3)",padding:"2px 6px",borderRadius:5,letterSpacing:"0.03em",flexShrink:0}}>{u}u</span>
+        );
+      };
+
+      // ── Cycle awareness ────────────────────────────────────────────────────
+      // Returns {active:bool, tag:string|null} for a given item + protocol day + viewDay
+      const getCycleStatus = (item, pDay, vDay) => {
+        if (!item.cycle || !pDay) return {active:true, tag:null};
+        const c = item.cycle;
+        if (c.type === "daily") return {active:true, tag:null};
+        if (c.type === "weekdays") {
+          // Mon–Fri active, Sat–Sun off (dow 1–5 active)
+          const active = vDay >= 1 && vDay <= 5;
+          return {active, tag: active ? null : "REST DAY"};
+        }
+        if (c.type === "weeks") {
+          // Repeating on/off cycle based on protocol day
+          const cycleLen = (c.on + c.off) * 7;
+          const dayInCycle = ((pDay - 1) % cycleLen);
+          const active = dayInCycle < c.on * 7;
+          if (active) {
+            const weekInOn = Math.floor(dayInCycle / 7) + 1;
+            return {active:true, tag:`Wk ${weekInOn}/${c.on}`};
+          } else {
+            const daysLeft = cycleLen - dayInCycle;
+            const weeksLeft = Math.ceil(daysLeft / 7);
+            return {active:false, tag:`OFF · ${weeksLeft}wk left`};
+          }
+        }
+        if (c.type === "fixed") {
+          // e.g. Epithalon: 10 days on then long off
+          const cycleLen = c.onDays + c.offDays;
+          const dayInCycle = ((pDay - 1) % cycleLen);
+          const active = dayInCycle < c.onDays;
+          if (active) return {active:true, tag:`Day ${dayInCycle+1}/${c.onDays}`};
+          const daysLeft = cycleLen - dayInCycle;
+          return {active:false, tag:`OFF · ${daysLeft}d left`};
+        }
+        return {active:true, tag:null};
+      };
+
       const renderDaily = () => {
         const today=new Date().getDay(); const weeklyInjs=WEEKLY_INJECTIONS[viewDay]||[];
         const dayInfo=DAY_NOTES[viewDay]; const isToday=viewDay===today;
-        const allDailyItems=DAILY.reduce((s,b)=>s+b.items.length,0);
-        const doneDaily=DAILY.reduce((sum,blk,bi)=>sum+blk.items.filter(it=>chk[`${viewDay}-${bi}-${it.name}`]).length,0);
-        const doneWeekly=weeklyInjs.filter((_,i)=>chk[`${viewDay}-weekly-${i}`]).length;
-        const totalItems=allDailyItems+weeklyInjs.length; const totalDone=doneDaily+doneWeekly;
-        const pct=totalItems>0?Math.round((totalDone/totalItems)*100):0;
+        const isSunday=viewDay===0;
+
+        // ── Build unified timeline ──────────────────────────────────────────
+        const timeline = [];
+
+        // 1) DAILY protocol blocks — merge weekly injections into Post-Training block (timeHour:8)
+        DAILY.forEach((blk, bi) => {
+          if (blk.icon === "meal") return;
+          const extraItems = blk.timeHour === 8
+            ? weeklyInjs.map((w, wi) => ({
+                name: w.name, dose: w.dose, method: w.method, purpose: w.purpose,
+                note: w.note, color: w.color, t: false, cycle: {type:"daily"},
+                weekly: true, weeklyIdx: wi,
+              }))
+            : [];
+          timeline.push({
+            sortHour: blk.timeHour, type: "inject", key: `daily-${bi}`,
+            label: blk.label, time: blk.time, color: blk.color, icon: blk.icon,
+            blend: blk.blend || null, items: [...blk.items, ...extraItems], bi,
+          });
+        });
+
+        // 2) Diet meals (from DIET_MEALS) — insert in time order
+        const mealHours = { m1:9.5, m2:12, m3:17, m4:20.25 };
+        const activeMeals = isSunday
+          ? DIET_MEALS.filter(m=>m.id!=="m3").map(m=>m.id==="m2"?{...m,macros:{...m.macros,c:m.macros.c*2,cal:m.macros.cal+(m.macros.c*4)}}:m)
+          : DIET_MEALS;
+        activeMeals.forEach(meal => {
+          timeline.push({
+            sortHour: mealHours[meal.id] || 12, type: "meal", key: `meal-${meal.id}`,
+            label: meal.label, time: meal.time, color: meal.color, icon: meal.icon,
+            mealId: meal.id, mealNote: meal.note, mealOptions: meal.options,
+            mealSupps: meal.supps, macros: meal.macros, optional: meal.id === "m4",
+          });
+        });
+
+        // Sort by hour
+        timeline.sort((a,b) => a.sortHour - b.sortHour);
+
+        // ── Count trackable items for progress ──────────────────────────────
+        let totalItems = 0, totalDone = 0;
+        // DAILY items — only count cycle-active ones, skip weekly items (counted below)
+        DAILY.forEach((blk, bi) => {
+          blk.items.forEach(it => {
+            if (it.weekly) return;
+            const cs = getCycleStatus(it, protocolDay, viewDay);
+            if (!cs.active) return;
+            totalItems++;
+            if (chk[`${viewDay}-${bi}-${it.name}`]) totalDone++;
+          });
+        });
+        // Weekly injs
+        weeklyInjs.forEach((_,wi) => {
+          totalItems++;
+          if (chk[`${viewDay}-weekly-${wi}`]) totalDone++;
+        });
+        // Diet meals (each meal = 1 checkable)
+        activeMeals.forEach(meal => {
+          if (meal.id !== "m4") { totalItems++; if (chk[`${viewDay}-meal-${meal.id}`]) totalDone++; }
+        });
+
+        const pct = totalItems > 0 ? Math.round((totalDone/totalItems)*100) : 0;
+
+        // ── Sub-components ─────────────────────────────────────────────────
+        const Chevron = ({open}) => (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:open?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
+            <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        );
+
+        const CheckBox = ({done, color}) => (
+          <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
+            border:`2px solid ${done ? color : "rgba(255,255,255,0.35)"}`,
+            background: done ? color : "transparent",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:12,color:"#fff",fontWeight:700,transition:"all 0.18s"}}>
+            {done && "✓"}
+          </div>
+        );
+
+        // Render a single timeline entry card
+        const TimelineCard = ({entry}) => {
+          const cardKey = entry.key;
+          const isExpanded = !!open[cardKey];
+          const toggleCard = () => setOpen(p=>({...p,[cardKey]:!p[cardKey]}));
+
+          // ── MEAL card ────────────────────────────────────────────────────
+          if (entry.type === "meal") {
+            const mealDone = !!chk[`${viewDay}-meal-${entry.mealId}`];
+            const checkMeal = () => check(`${viewDay}-meal-${entry.mealId}`);
+            const optKey = `${viewDay}-mealopt-${entry.mealId}`;
+            return (
+              <div style={{marginBottom:8}}>
+                {entry.optional && (
+                  <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",marginBottom:4,paddingLeft:2}}>OPTIONAL — ONLY IF SHORT ON PROTEIN</div>
+                )}
+                <div style={{background:"rgba(255,255,255,0.07)",border:`1px solid ${mealDone?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${entry.color}`,borderRadius:14,overflow:"hidden",transition:"border-color 0.2s"}}>
+                  <div onClick={toggleCard} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                    <div style={{width:36,height:36,borderRadius:9,background:`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <Icon name={entry.icon} size={17} color={entry.color}/>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3,flexWrap:"wrap"}}>
+                        <span style={{fontSize:15,fontWeight:600,color:mealDone?"rgba(255,255,255,0.5)":"#fff"}}>{entry.label}</span>
+                        {entry.optional&&<div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.07)",padding:"2px 6px",borderRadius:4,letterSpacing:"0.05em"}}>OPT</div>}
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:13,color:entry.color,fontWeight:600,background:`${entry.color}18`,padding:"2px 8px",borderRadius:6}}>{entry.time}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                      <Chevron open={isExpanded}/>
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div style={{borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+                      {/* Mark eaten row */}
+                      <div onClick={checkMeal} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",background:mealDone?"rgba(52,211,153,0.06)":"transparent",WebkitTapHighlightColor:"transparent"}}>
+                        <CheckBox done={mealDone} color={entry.color}/>
+                        <span style={{fontSize:14,fontWeight:600,color:mealDone?"#34D399":"rgba(255,255,255,0.65)"}}>{mealDone?"Meal logged ✓":"Mark meal as eaten"}</span>
+                        <span style={{fontSize:12,color:"#38BDF8",background:"rgba(56,189,248,0.15)",padding:"2px 8px",borderRadius:5,fontWeight:700}}>{entry.macros.p}g P</span>
+                      </div>
+                      {/* Protocol note */}
+                      <div style={{padding:"10px 14px",background:`${entry.color}0d`,fontSize:13,color:"rgba(255,255,255,0.6)",lineHeight:1.55,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                        {entry.mealNote}
+                      </div>
+                      {/* Supplements with this meal */}
+                      {entry.mealSupps.length > 0 && (
+                        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                          <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",padding:"10px 14px 6px"}}>TAKE WITH THIS MEAL</div>
+                          {entry.mealSupps.map((s,i)=>{
+                            const sk=`${viewDay}-mealsupp-${entry.mealId}-${i}`;
+                            const sdone=!!chk[sk];
+                            return(
+                              <div key={i} onClick={()=>check(sk)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",background:sdone?"rgba(52,211,153,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
+                                <CheckBox done={sdone} color={entry.color}/>
+                                <span style={{fontSize:14,fontWeight:500,color:sdone?"rgba(255,255,255,0.4)":"#fff",textDecoration:sdone?"line-through":"none"}}>{s.name}</span>
+                                {s.dose&&<span style={{fontSize:12,color:entry.color,background:`${entry.color}18`,padding:"2px 8px",borderRadius:5,fontWeight:600}}>{s.dose}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // ── WEEKLY INJECTION card ─────────────────────────────────────────
+          // ── INJECT / TRAIN / COFFEE card ──────────────────────────────────
+          const doneCount = entry.items.filter(it=>{
+            if (it.weekly) return !!chk[`${viewDay}-weekly-${it.weeklyIdx}`];
+            const cs = getCycleStatus(it, protocolDay, viewDay);
+            return cs.active && chk[`${viewDay}-${entry.bi}-${it.name}`];
+          }).length;
+          const activeCount = entry.items.filter(it=>it.weekly || getCycleStatus(it,protocolDay,viewDay).active).length;
+          const allDone = activeCount > 0 && doneCount === activeCount;
+          return (
+            <div style={{background:"rgba(255,255,255,0.07)",border:`1px solid ${allDone?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${entry.color}`,borderRadius:14,marginBottom:8,overflow:"hidden",transition:"border-color 0.2s"}}>
+              <div onClick={toggleCard} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                <div style={{width:36,height:36,borderRadius:9,background:`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <Icon name={entry.icon} size={17} color={entry.color}/>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:15,fontWeight:600,color:allDone?"rgba(255,255,255,0.5)":"#fff",marginBottom:3}}>{entry.label}</div>
+                  <span style={{fontSize:13,color:entry.color,background:`${entry.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:600}}>{entry.time}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                  <span style={{fontSize:13,color:allDone?"#34D399":"rgba(255,255,255,0.5)",fontWeight:allDone?600:400}}>{doneCount}/{activeCount}</span>
+                  <Chevron open={isExpanded}/>
+                </div>
+              </div>
+              {isExpanded && (
+                <div style={{borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+                  {entry.items.map((item,ii) => {
+                    const isWeekly = !!item.weekly;
+                    const k = isWeekly
+                      ? `${viewDay}-weekly-${item.weeklyIdx}`
+                      : `${viewDay}-${entry.bi}-${item.name}`;
+                    const done=chk[k];
+                    const cs = isWeekly ? {active:true,tag:null} : getCycleStatus(item, protocolDay, viewDay);
+                    const itemColor = item.color || entry.color;
+                    const itemDoseMg = parseDoseMg(item.dose);
+                    return (
+                      <div key={ii} onClick={cs.active?()=>check(k, item.name, itemDoseMg):undefined} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:ii<entry.items.length-1?"1px solid rgba(255,255,255,0.07)":"none",cursor:cs.active?"pointer":"default",background:done?"rgba(52,211,153,0.04)":!cs.active?"rgba(0,0,0,0.15)":"transparent",WebkitTapHighlightColor:"transparent",opacity:cs.active?1:0.45}}>
+                        <CheckBox done={done} color={cs.active?itemColor:"rgba(255,255,255,0.2)"}/>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3,flexWrap:"wrap"}}>
+                            <span style={{fontSize:15,fontWeight:500,color:done?"rgba(255,255,255,0.45)":cs.active?"#fff":"rgba(255,255,255,0.4)",textDecoration:done?"line-through":"none"}}>{item.name}</span>
+                            {isWeekly && <span style={{fontSize:11,fontWeight:700,color:itemColor,background:`${itemColor}18`,padding:"2px 6px",borderRadius:10,letterSpacing:"0.04em"}}>WEEKLY</span>}
+                            <UnitTag name={item.name}/>
+                            {cs.active
+                              ? <span style={{fontSize:12,color:itemColor,background:`${itemColor}18`,padding:"2px 7px",borderRadius:5}}>{item.dose}</span>
+                              : <span style={{fontSize:11,fontWeight:700,color:"#F87171",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",padding:"2px 8px",borderRadius:5,letterSpacing:"0.04em"}}>{cs.tag}</span>
+                            }
+                            {cs.active && <span style={{fontSize:12,color:"rgba(255,255,255,0.55)",background:"rgba(255,255,255,0.06)",padding:"2px 7px",borderRadius:5}}>{item.method}</span>}
+                            {cs.active && cs.tag && <span style={{fontSize:11,fontWeight:600,color:"#34D399",background:"rgba(52,211,153,0.1)",border:"1px solid rgba(52,211,153,0.2)",padding:"2px 7px",borderRadius:5}}>{cs.tag}</span>}
+                            {item.t && cs.active && <span style={{fontSize:12,color:"#F87171",background:"rgba(248,113,113,0.12)",padding:"2px 6px",borderRadius:5}}>★</span>}
+                          </div>
+                          {cs.active && <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",lineHeight:1.5}}>{item.purpose}</div>}
+                          {cs.active && item.note && <div style={{fontSize:12,color:itemColor,background:`${itemColor}0f`,border:`1px solid ${itemColor}22`,borderRadius:6,padding:"4px 8px",marginTop:4}}>{item.note}</div>}
+                          {!cs.active && item.cycle?.note && <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",lineHeight:1.4}}>{item.cycle.note}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {entry.blend && (
+                    <div style={{margin:"0 14px 12px",padding:"9px 12px",background:`${entry.color}10`,border:`1px solid ${entry.color}22`,borderRadius:8,fontSize:13,color:entry.color,fontWeight:500,lineHeight:1.5}}>
+                      <span style={{fontWeight:700}}>Blend: </span>{entry.blend}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        };
 
         if (!protocolStartDate) {
           return (
             <div style={{
-              minHeight:"calc(100vh - 80px)",
+              height:"calc(100vh - 80px)",
+              maxHeight:"calc(100vh - 80px)",
+              overflow:"hidden",
               display:"flex", flexDirection:"column",
-              justifyContent:"space-between",
-              padding:`calc(env(safe-area-inset-top) + 80px) 24px calc(env(safe-area-inset-bottom) + 24px)`,
+              justifyContent:"center",
+              padding:`calc(env(safe-area-inset-top) + 40px) 24px calc(env(safe-area-inset-bottom) + 24px)`,
+              gap:32,
             }}>
-              {/* Content */}
               <div style={{textAlign:"center"}}>
                 <div style={{width:64,height:64,borderRadius:18,background:"rgba(167,139,250,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
                   <Icon name="inject" size={28} color="#A78BFA"/>
                 </div>
-                <div style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:28}}>Protocol Not Started</div>
-                <div style={{background:"rgba(245,169,74,0.08)",border:"1px solid rgba(245,169,74,0.2)",borderRadius:14,padding:"16px",textAlign:"left",marginBottom:8}}>
-                  <div style={{fontSize:13,fontWeight:700,color:"#F5A94A",letterSpacing:"0.06em",marginBottom:12}}>PRE-START CHECKLIST</div>
-                  {["Peptides received & reconstituted","Luer Lock syringes + needles on hand","Sharps container set up","Bacteriostatic water ready","Supplements ordered","Baseline bloodwork done"].map((item,i)=>(
-                    <div key={i} style={{display:"flex",gap:10,marginBottom:8,alignItems:"center"}}>
-                      <div style={{width:6,height:6,borderRadius:"50%",background:"#34D399",flexShrink:0}}/>
-                      <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>{item}</span>
-                    </div>
-                  ))}
-                </div>
+                <div style={{fontSize:20,fontWeight:700,color:"#fff"}}>Protocol Not Started</div>
               </div>
-
-              {/* CTA */}
-              <div style={{paddingTop:24}}>
+              <div>
                 {!showStartConfirm ? (
                   <button onClick={()=>setShowStartConfirm(true)} style={{width:"100%",padding:"17px",background:"linear-gradient(180deg,#F5A94A 0%,#F08C28 100%)",border:"none",borderRadius:28,fontSize:17,fontWeight:600,color:"#fff",cursor:"pointer"}}>
                     Start Protocol Today
@@ -2188,98 +2695,43 @@
             <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"14px 16px",marginBottom:12}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{DAY_NAMES[viewDay]}</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.65)",marginTop:2}}>{dayInfo.note}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:"#fff"}}>{DAY_NAMES[viewDay]}</div>
+                  <div style={{fontSize:13,color:dayInfo.color,marginTop:2,fontWeight:600}}>{dayInfo.note}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:20,fontWeight:700,color:pct===100?"#34D399":"#fff"}}>{pct}%</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{totalDone}/{totalItems} done</div>
+                  <div style={{fontSize:22,fontWeight:700,color:pct===100?"#34D399":"#fff"}}>{pct}%</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>{totalDone}/{totalItems} done</div>
                 </div>
               </div>
-              <div style={{height:5,background:"rgba(255,255,255,0.12)",borderRadius:3,overflow:"hidden"}}>
+              <div style={{height:5,background:"rgba(255,255,255,0.1)",borderRadius:3,overflow:"hidden"}}>
                 <div style={{height:"100%",borderRadius:2,width:`${pct}%`,transition:"width 0.4s",
-                  background:pct===100?"#34D399":`linear-gradient(90deg,#6366F1,#818CF8)`}}/>
+                  background:pct===100?"#34D399":"linear-gradient(90deg,#6366F1,#818CF8)"}}/>
               </div>
             </div>
 
             {isToday&&<><ReadinessScore chk={chk} viewDay={viewDay} theme={T}/><InjectionTimer theme={T}/><StreakTracker protocolStartDate={protocolStartDate} theme={T}/></>}
 
-            {/* Weekly injections */}
-            {weeklyInjs.length>0&&(
-              <div style={{marginBottom:12}}>
-                <div style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.75)",letterSpacing:"0.04em",marginBottom:8,display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:"50%",background:"linear-gradient(180deg,#F5A94A 0%,#F08C28 100%)"}}/> Weekly Injections</div>
-                <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,overflow:"hidden"}}>
-                  {weeklyInjs.map((w,i)=>{const k=`${viewDay}-weekly-${i}`;const done=chk[k];return(
-                    <div key={i} onClick={()=>check(k)} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderBottom:i<weeklyInjs.length-1?"1px solid rgba(255,255,255,0.08)":"none",cursor:"pointer",background:done?"rgba(52,211,153,0.05)":"transparent",WebkitTapHighlightColor:"transparent"}}>
-                      <div style={{width:26,height:26,borderRadius:7,flexShrink:0,border:`2px solid ${done?"#34D399":"rgba(255,255,255,0.6)"}`,background:done?"#34D399":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#fff",fontWeight:700,transition:"all 0.2s"}}>{done?"✓":""}</div>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:15,fontWeight:600,color:done?"rgba(255,255,255,0.65)":"#fff",textDecoration:done?"line-through":"none",marginBottom:4}}>{w.name}</div>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{w.dose}</span>
-                          <span style={{fontSize:13,color:"rgba(255,255,255,0.65)",background:"rgba(255,255,255,0.06)",padding:"2px 7px",borderRadius:6}}>{w.method}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );})}
+            {isSunday && (
+              <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.28)",borderRadius:12,padding:"11px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+                <div style={{fontSize:18}}>🔄</div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#F59E0B"}}>Sunday Refeed</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>2× carbs today · Resets leptin + glycogen</div>
                 </div>
               </div>
             )}
 
-            {/* Daily protocol */}
-            <div style={{fontSize:28,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:14}}>Today's doses</div>
-            {DAILY.map((blk,bi)=>{
-              const isOpen=open[bi]; const doneCount=blk.items.filter(it=>chk[`${viewDay}-${bi}-${it.name}`]).length;
-              const allDone=doneCount===blk.items.length&&blk.items.length>0;
-              return (
-                <div key={bi} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,marginBottom:8,overflow:"hidden"}}>
-                  <div onClick={()=>toggle(bi)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                    <div style={{width:38,height:38,borderRadius:10,background:`${blk.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <Icon name={blk.icon} size={18} color={blk.color}/>
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:15,fontWeight:600,color:"#fff",marginBottom:4}}>{blk.label}</div>
-                      <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <span style={{fontSize:13,color:blk.color,background:`${blk.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:600}}>{blk.time}</span>
-                      </div>
-                    </div>
-                    <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                      <span style={{fontSize:13,color:allDone?"#34D399":"rgba(255,255,255,0.65)",fontWeight:allDone?600:400}}>{doneCount}/{blk.items.length}</span>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:isOpen?"rotate(180deg)":"none",transition:"0.2s",color:"rgba(255,255,255,0.65)"}}>
-                        <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
-                  {isOpen&&(
-                    <div style={{borderTop:"1px solid rgba(255,255,255,0.08)"}}>
-                      {blk.items.map((item,ii)=>{const k=`${viewDay}-${bi}-${item.name}`;const done=chk[k];return(
-                        <div key={ii} onClick={()=>check(k)} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:ii<blk.items.length-1?"1px solid rgba(255,255,255,0.08)":"none",cursor:"pointer",background:done?"rgba(52,211,153,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
-                          <div style={{width:26,height:26,borderRadius:7,flexShrink:0,border:`2px solid ${done?"#34D399":"rgba(255,255,255,0.4)"}`,background:done?"#34D399":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#fff",fontWeight:700,transition:"all 0.2s"}}>{done?"✓":""}</div>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
-                              <span style={{fontSize:15,fontWeight:500,color:done?"rgba(255,255,255,0.65)":"#fff",textDecoration:done?"line-through":"none"}}>{item.name}</span>
-                              <span style={{fontSize:13,color:blk.color,background:`${blk.color}18`,padding:"2px 8px",borderRadius:6}}>{item.dose}</span>
-                              <span style={{fontSize:13,color:"rgba(255,255,255,0.65)",background:"rgba(255,255,255,0.06)",padding:"2px 7px",borderRadius:6}}>{item.method}</span>
-                              {item.t&&<span style={{fontSize:13,color:"#F87171",background:"rgba(248,113,113,0.12)",padding:"2px 6px",borderRadius:6}}>★</span>}
-                            </div>
-                            <div style={{fontSize:13,color:"rgba(255,255,255,0.65)",lineHeight:1.5}}>{item.purpose}</div>
-                          </div>
-                        </div>
-                      );})}
-                      {blk.blend&&(
-                        <div style={{margin:"0 16px 14px",padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.55}}>
-                          <span style={{color:blk.color,fontWeight:600}}>Blend: </span>{blk.blend}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em",marginBottom:10,marginTop:4}}>TIMELINE — {DAY_NAMES[viewDay].toUpperCase()}</div>
+
+            {timeline.map((entry) => (
+              <TimelineCard key={entry.key} entry={entry}/>
+            ))}
+
           </div>
         );
       };
 
-      const renderTools = () => <ReconCalcWizard/>;
+      const renderTools = () => <ReconCalcWizard onSave={saveDose} savedDoses={savedDoses}/>;
 
       // ─── Card primitives ──────────────────────────────────────────────────────
       const Card = ({children, style={}}) => (
@@ -2393,27 +2845,30 @@
               <Divider/>
               <div style={{padding:"12px 16px 4px"}}>
                 <SectionLabel style={{marginBottom:10}}>{bl.items.length} COMPOUNDS</SectionLabel>
-                {bl.items.map((item,j)=>(
-                  <div key={j} style={{display:"flex",alignItems:"center",gap:10,paddingBottom:10,borderBottom:j<bl.items.length-1?"1px solid rgba(255,255,255,0.08)":"none",marginBottom:j<bl.items.length-1?10:4}}>
-                    <div style={{width:6,height:6,borderRadius:"50%",background:bl.color,flexShrink:0}}/>
-                    <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>{item}</span>
-                  </div>
-                ))}
+                {bl.items.map((item,j)=>{
+                  const text = typeof item === "string" ? item : item.text;
+                  const days = typeof item === "object" ? item.days : null;
+                  const itemNote = typeof item === "object" ? item.note : null;
+                  const blendName = text.split(" — ")[0].trim();
+                  return (
+                    <div key={j} style={{paddingBottom:10,borderBottom:j<bl.items.length-1?"1px solid rgba(255,255,255,0.08)":"none",marginBottom:j<bl.items.length-1?10:4}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{width:6,height:6,borderRadius:"50%",background:bl.color,flexShrink:0}}/>
+                        <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",flex:1}}>{text}</span>
+                        {days&&days.map(d=>(
+                          <span key={d} style={{fontSize:11,fontWeight:700,color:bl.color,background:`${bl.color}18`,border:`1px solid ${bl.color}33`,padding:"2px 6px",borderRadius:8,letterSpacing:"0.04em",flexShrink:0}}>{d}</span>
+                        ))}
+                        <UnitTag name={blendName}/>
+                      </div>
+                      {itemNote&&<div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:4,paddingLeft:16}}>{itemNote}</div>}
+                    </div>
+                  );
+                })}
               </div>
               <div style={{margin:"0 16px 14px",padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.55}}>{bl.note}</div>
             </Card>
           ))}
 
-          <SectionLabel style={{marginTop:20}}>SUPPLIES & EQUIPMENT</SectionLabel>
-          <Card>
-            {SUPPLIES.map((sup,i)=>(
-              <Row key={i} last={i===SUPPLIES.length-1}
-                left={sup.item}
-                right={<span style={{fontSize:13,color:"rgba(255,255,255,0.75)",background:"rgba(255,255,255,0.07)",padding:"3px 9px",borderRadius:8}}>{sup.spec}</span>}
-                sub={sup.use}
-              />
-            ))}
-          </Card>
         </div>
       );
 
@@ -2629,17 +3084,36 @@
               {ORDERS.map((o,i)=>{
                 const cs=orderStatuses[i]||o.status; const sc=SC[cs]||"rgba(255,255,255,0.65)";
                 const cSrc=orderSources[i]||o.src;
+                const totalMg = parseTotalMg(o.mg);
+                const remMg = invRemaining[i] ?? totalMg;
+                const pct = totalMg > 0 ? Math.max(0, Math.min(100, (remMg / totalMg) * 100)) : null;
+                const remColor = pct === null ? T.muted : pct > 50 ? T.green : pct > 20 ? T.amber : T.rose;
+                const fmtMg = (mg) => mg >= 1000 ? `${(mg/1000).toFixed(2).replace(/\.?0+$/,"")}g` : `${parseFloat(mg.toFixed(2))}mg`;
                 return (
                   <div key={i} style={{padding:"14px 16px",borderBottom:i<ORDERS.length-1?"1px solid rgba(255,255,255,0.08)":"none"}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                       <div style={{display:"flex",alignItems:"center",gap:9}}>
                         <div style={{width:7,height:7,borderRadius:"50%",background:sc,flexShrink:0}}/>
                         <span style={{fontSize:13,fontWeight:500,color:"#fff"}}>{o.name}</span>
                       </div>
-                      <span style={{fontSize:13,fontWeight:600,color:T.green}}>{o.cost}</span>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        {pct !== null && remMg !== totalMg && <span style={{fontSize:13,fontWeight:700,color:remColor}}>{fmtMg(remMg)} left</span>}
+                        <span style={{fontSize:13,fontWeight:600,color:T.green}}>{o.cost}</span>
+                      </div>
                     </div>
+                    {pct !== null && remMg !== totalMg && (
+                      <div style={{marginBottom:8,paddingLeft:16}}>
+                        <div style={{height:4,background:"rgba(255,255,255,0.08)",borderRadius:2,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:2,width:`${pct}%`,background:remColor,transition:"width 0.4s"}}/>
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",marginTop:3}}>
+                          <span style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>0</span>
+                          <span style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>{o.mg} total</span>
+                        </div>
+                      </div>
+                    )}
                     <div style={{display:"flex",gap:6,marginBottom:9,paddingLeft:16,flexWrap:"wrap"}}>
-                      {[o.spec,`Qty ${o.qty}`,o.mg].map((t,j)=><Tag key={j}>{t}</Tag>)}
+                      {[o.spec,`Qty ${o.qty}`].map((t,j)=><Tag key={j}>{t}</Tag>)}
                     </div>
                     <div style={{display:"flex",gap:8,paddingLeft:16,flexWrap:"wrap"}}>
                       <select value={cSrc} onChange={e=>setOrderSource(i,e.target.value)} style={sel(SRC[cSrc]||T.muted)}>{SOURCES.map(s=><option key={s}>{s}</option>)}</select>
@@ -2716,157 +3190,199 @@
       };
 
       const renderDiet = () => {
-        const totalP = DIET_MEALS.reduce((s,m)=>s+m.macros.p,0);
-        const totalC = DIET_MEALS.reduce((s,m)=>s+m.macros.c,0);
-        const totalF = DIET_MEALS.reduce((s,m)=>s+m.macros.f,0);
-        const totalCal = DIET_MEALS.reduce((s,m)=>s+m.macros.cal,0);
+        const dow = new Date().getDay();
+        const isSunday = dow === 0;
         const toggleDiet = (id) => setDietOpen(p=>({...p,[id]:!p[id]}));
+
+        const meals = isSunday
+          ? DIET_MEALS.map(m=>({...m, macros:{...m.macros, c:m.macros.c*2, cal:m.macros.cal+(m.macros.c*4)}}))
+          : DIET_MEALS;
+
+        const totalP   = meals.reduce((s,m)=>s+m.macros.p,0);
+        const totalC   = meals.reduce((s,m)=>s+m.macros.c,0);
+        const totalF   = meals.reduce((s,m)=>s+m.macros.f,0);
+        const totalCal = meals.reduce((s,m)=>s+m.macros.cal,0);
+
         const Chevron = ({open}) => (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:open?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
             <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         );
+
+        const MacroBar = ({p,f,c}) => {
+          const total = p*4 + f*9 + c*4;
+          if(!total) return null;
+          const pPct = Math.round((p*4/total)*100);
+          const fPct = Math.round((f*9/total)*100);
+          const cPct = 100-pPct-fPct;
+          return (
+            <div style={{height:5,borderRadius:3,overflow:"hidden",display:"flex",gap:1,marginTop:8}}>
+              <div style={{width:`${pPct}%`,background:"#38BDF8",borderRadius:2}}/>
+              <div style={{width:`${fPct}%`,background:"#F59E0B",borderRadius:2}}/>
+              <div style={{width:`${cPct}%`,background:"#34D399",borderRadius:2}}/>
+            </div>
+          );
+        };
+
         return (
           <div style={{padding:"16px"}}>
 
-            {/* Daily targets */}
-            <SectionLabel>DAILY TARGETS</SectionLabel>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:20}}>
+            {isSunday&&(
+              <div style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+                <div style={{fontSize:22}}>🔄</div>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:"#F59E0B",marginBottom:2}}>Sunday Refeed Active</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>2× carbs today · Resets leptin + glycogen (Trigili)</div>
+                </div>
+              </div>
+            )}
+
+            <SectionLabel>{isSunday?"REFEED TARGETS":"DAILY TARGETS"}</SectionLabel>
+            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                <div>
+                  <div style={{fontSize:28,fontWeight:800,color:"#38BDF8",letterSpacing:"-0.5px",lineHeight:1}}>{totalP}g</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginTop:3,fontWeight:600,letterSpacing:"0.06em"}}>PROTEIN</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:22,fontWeight:700,color:"#fff"}}>{totalCal}</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginTop:3,fontWeight:600,letterSpacing:"0.06em"}}>CALORIES</div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{flex:1,background:"rgba(245,158,11,0.1)",borderRadius:10,padding:"9px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:17,fontWeight:700,color:"#F59E0B"}}>{totalF}g</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:1,fontWeight:600,letterSpacing:"0.05em"}}>FAT</div>
+                </div>
+                <div style={{flex:1,background:"rgba(52,211,153,0.1)",borderRadius:10,padding:"9px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:17,fontWeight:700,color:"#34D399"}}>{totalC}g</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:1,fontWeight:600,letterSpacing:"0.05em"}}>CARBS</div>
+                </div>
+              </div>
+              <MacroBar p={totalP} f={totalF} c={totalC}/>
+              <div style={{display:"flex",gap:12,marginTop:6}}>
+                {[["#38BDF8","Protein"],["#F59E0B","Fat"],["#34D399","Carbs"]].map(([col,lbl],i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{width:8,height:8,borderRadius:2,background:col,flexShrink:0}}/>
+                    <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{lbl}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <SectionLabel style={{marginTop:18}}>EATING WINDOW</SectionLabel>
+            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"14px 16px",marginBottom:18}}>
               {[
-                {label:"Protein",val:`${totalP}g`,color:T.cyan},
-                {label:"Fat",val:`${totalF}g`,color:T.amber},
-                {label:"Carbs",val:`${totalC}g`,color:T.green},
-                {label:"Calories",val:`${totalCal}`,color:T.muted},
-              ].map((s,i)=>(
-                <div key={i} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
-                  <div style={{fontSize:17,fontWeight:700,color:s.color,marginBottom:2}}>{s.val}</div>
-                  <div style={{fontSize:13,color:T.muted}}>{s.label}</div>
+                {dot:"#A78BFA",label:"Fasted window",detail:"12 AM → 9:30 AM · Protects 5:30 + 7:30 AM injections"},
+                {dot:"#34D399",label:"Eating window",detail:"9:30 AM → 6:30 PM · ~9 hrs"},
+                {dot:"#818CF8",label:"Shake allowed",detail:"8:00–8:30 PM · Water only, digests before 9 PM GH"},
+                {dot:"#A78BFA",label:"GH injection",detail:"9 PM → fasted state required"},
+              ].map((row,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:i<3?8:0}}>
+                  <div style={{width:8,height:8,borderRadius:"50%",background:row.dot,flexShrink:0,marginTop:3}}/>
+                  <div>
+                    <span style={{fontSize:13,fontWeight:600,color:"#fff"}}>{row.label}</span>
+                    <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginLeft:6}}>{row.detail}</span>
+                  </div>
                 </div>
               ))}
             </div>
 
-            {/* Eating window */}
-            <SectionLabel>EATING WINDOW</SectionLabel>
-            <Card style={{marginBottom:20,padding:"14px 16px"}}>
-              <div style={{fontSize:13,color:T.muted,lineHeight:1.7}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{color:T.text,fontWeight:600}}>Fast until 9:30 AM</span>
-                  <span>Protects 5:30 + 7:30 AM injections</span>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{color:T.text,fontWeight:600}}>Stop eating by 6:30 PM</span>
-                  <span>Clears for 9 PM GH injection</span>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between"}}>
-                  <span style={{color:T.text,fontWeight:600}}>Shake allowed 8–8:30 PM</span>
-                  <span>Water only — digests in time</span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Meals */}
             <SectionLabel>MEALS</SectionLabel>
-            {DIET_MEALS.map(meal=>{
+            {meals.map((meal,mi)=>{
               const isOpen = !!dietOpen[meal.id];
+              const isOptional = meal.id === "m4";
               return (
-                <Card key={meal.id} style={{marginBottom:10}}>
-                  {/* Meal header */}
-                  <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                    <div style={{width:38,height:38,borderRadius:10,background:`${meal.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <Icon name={meal.icon} size={18} color={meal.color}/>
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:15,fontWeight:600,color:T.text,marginBottom:2}}>{meal.label}</div>
-                      <div style={{fontSize:13,color:meal.color,fontWeight:600}}>{meal.time}</div>
-                    </div>
-                    <div style={{textAlign:"right",marginRight:8,flexShrink:0}}>
-                      <div style={{fontSize:15,fontWeight:700,color:T.cyan}}>{meal.macros.p}g P</div>
-                      <div style={{fontSize:13,color:T.muted}}>{meal.macros.cal} cal</div>
-                    </div>
-                    <Chevron open={isOpen}/>
-                  </div>
-
-                  {isOpen&&(
-                    <div style={{borderTop:`1px solid ${T.border}`}}>
-                      {/* Note */}
-                      <div style={{padding:"10px 16px",background:`${meal.color}0f`,fontSize:13,color:T.muted,lineHeight:1.55}}>
-                        {meal.note}
-                      </div>
-
-                      {/* Macro bar */}
-                      <div style={{padding:"12px 16px",borderTop:`1px solid ${T.border}`}}>
-                        <div style={{display:"flex",gap:12,marginBottom:8}}>
-                          {[
-                            {l:"P",v:meal.macros.p+"g",c:T.cyan},
-                            {l:"F",v:meal.macros.f+"g",c:T.amber},
-                            {l:"C",v:meal.macros.c+"g",c:T.green},
-                            {l:"kcal",v:meal.macros.cal,c:T.muted},
-                          ].map((m,i)=>(
-                            <div key={i} style={{flex:1,textAlign:"center",background:T.card,borderRadius:8,padding:"6px 4px"}}>
-                              <div style={{fontSize:13,fontWeight:700,color:m.c}}>{m.v}</div>
-                              <div style={{fontSize:13,color:T.muted}}>{m.l}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Options */}
-                      {meal.options.map((opt,oi)=>{
-                        const optKey = `${meal.id}-opt${oi}`;
-                        const optOpen = !!dietOpen[optKey];
-                        const optP = opt.items.reduce((s,it)=>s+it.p,0);
-                        const optCal = opt.items.reduce((s,it)=>s+it.cal,0);
-                        return (
-                          <div key={oi} style={{borderTop:`1px solid ${T.border}`}}>
-                            <div onClick={()=>setDietOpen(p=>({...p,[optKey]:!p[optKey]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                              <div style={{width:6,height:6,borderRadius:"50%",background:meal.color,flexShrink:0}}/>
-                              <span style={{flex:1,fontSize:15,fontWeight:500,color:T.text}}>{opt.label}</span>
-                              <span style={{fontSize:13,color:T.cyan,fontWeight:600,marginRight:6}}>{optP}g P · {optCal} cal</span>
-                              <Chevron open={optOpen}/>
-                            </div>
-                            {optOpen&&(
-                              <div style={{paddingBottom:8}}>
-                                {opt.items.map((item,ii)=>(
-                                  <div key={ii} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 16px 8px 28px",borderTop:ii>0?`1px solid ${T.border}`:"none"}}>
-                                    <div style={{flex:1,fontSize:13,color:T.text}}>{item.name}</div>
-                                    <div style={{display:"flex",gap:8,flexShrink:0}}>
-                                      <span style={{fontSize:13,color:T.cyan,fontWeight:600}}>{item.p}g P</span>
-                                      <span style={{fontSize:13,color:T.muted}}>{item.cal} cal</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Supps */}
-                      {meal.supps.length>0&&(
-                        <div style={{borderTop:`1px solid ${T.border}`,padding:"10px 16px"}}>
-                          <div style={{fontSize:13,fontWeight:700,color:T.muted,letterSpacing:"0.06em",marginBottom:6}}>TAKE WITH THIS MEAL</div>
-                          {meal.supps.map((s,i)=>(
-                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                              <div style={{width:5,height:5,borderRadius:"50%",background:T.green,flexShrink:0}}/>
-                              <span style={{fontSize:13,color:T.muted}}>{s}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div key={meal.id} style={{marginBottom:10}}>
+                  {isOptional&&(
+                    <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",letterSpacing:"0.08em",marginBottom:5,paddingLeft:4}}>OPTIONAL — ONLY IF SHORT ON PROTEIN</div>
                   )}
-                </Card>
+                  <Card>
+                    <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                      <div style={{width:38,height:38,borderRadius:10,background:`${meal.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        <Icon name={meal.icon} size={18} color={meal.color}/>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                          <div style={{fontSize:15,fontWeight:600,color:isOptional?"rgba(255,255,255,0.55)":"#fff"}}>{meal.label}</div>
+                          {isOptional&&<div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.07)",padding:"2px 6px",borderRadius:4,letterSpacing:"0.05em"}}>OPT</div>}
+                        </div>
+                        <div style={{fontSize:13,color:meal.color,fontWeight:600}}>{meal.time}</div>
+                      </div>
+                      <div style={{textAlign:"right",marginRight:8,flexShrink:0}}>
+                        <div style={{fontSize:15,fontWeight:700,color:"#38BDF8"}}>{meal.macros.p}g P</div>
+                        <div style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>{meal.macros.cal} cal</div>
+                      </div>
+                      <Chevron open={isOpen}/>
+                    </div>
+
+                    {isOpen&&(
+                      <div style={{borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+                        <div style={{padding:"10px 16px",background:`${meal.color}0d`,fontSize:13,color:"rgba(255,255,255,0.6)",lineHeight:1.55,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                          {meal.note}
+                        </div>
+                        <div style={{display:"flex",gap:8,padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                          {[["P",meal.macros.p+"g","#38BDF8"],["F",meal.macros.f+"g","#F59E0B"],["C",meal.macros.c+"g","#34D399"],["kcal",meal.macros.cal,"rgba(255,255,255,0.45)"]].map(([l,v,c],i)=>(
+                            <div key={i} style={{flex:1,textAlign:"center",background:"rgba(255,255,255,0.05)",borderRadius:8,padding:"7px 4px"}}>
+                              <div style={{fontSize:13,fontWeight:700,color:c}}>{v}</div>
+                              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:1}}>{l}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {meal.options.map((opt,oi)=>{
+                          const optKey=`${meal.id}-opt${oi}`;
+                          const optOpen=!!dietOpen[optKey];
+                          const optP=opt.items.reduce((s,it)=>s+it.p,0);
+                          const optCal=opt.items.reduce((s,it)=>s+it.cal,0);
+                          return(
+                            <div key={oi} style={{borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                              <div onClick={()=>setDietOpen(p=>({...p,[optKey]:!p[optKey]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                                <div style={{width:6,height:6,borderRadius:"50%",background:meal.color,flexShrink:0}}/>
+                                <span style={{flex:1,fontSize:14,fontWeight:500,color:"rgba(255,255,255,0.85)"}}>{opt.label}</span>
+                                <span style={{fontSize:13,color:"#38BDF8",fontWeight:600,marginRight:6}}>{optP}g P · {optCal} cal</span>
+                                <Chevron open={optOpen}/>
+                              </div>
+                              {optOpen&&(
+                                <div style={{background:"rgba(0,0,0,0.15)",paddingBottom:4}}>
+                                  {opt.items.map((item,ii)=>(
+                                    <div key={ii} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 16px 9px 28px",borderTop:ii>0?"1px solid rgba(255,255,255,0.05)":"none"}}>
+                                      <div style={{flex:1,fontSize:13,color:"rgba(255,255,255,0.8)"}}>{item.name}</div>
+                                      <div style={{display:"flex",gap:10,flexShrink:0}}>
+                                        <span style={{fontSize:13,color:"#38BDF8",fontWeight:600}}>{item.p}g P</span>
+                                        <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>{item.cal} cal</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {meal.supps.length>0&&(
+                          <div style={{borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                            <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",letterSpacing:"0.08em",padding:"10px 16px 6px"}}>TAKE WITH THIS MEAL</div>
+                            {meal.supps.map((s,i)=>(
+                              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+                                <div style={{width:6,height:6,borderRadius:"50%",background:meal.color,flexShrink:0}}/>
+                                <span style={{fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.85)"}}>{s.name}</span>
+                                {s.dose&&<span style={{fontSize:12,color:meal.color,background:`${meal.color}18`,padding:"2px 8px",borderRadius:5,fontWeight:600}}>{s.dose}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </div>
               );
             })}
 
-            {/* Sunday refeed note */}
-            <SectionLabel style={{marginTop:20}}>SUNDAY REFEED</SectionLabel>
-            <Card style={{padding:"14px 16px"}}>
-              <div style={{fontSize:13,color:T.muted,lineHeight:1.65}}>
-                <div style={{fontSize:15,fontWeight:600,color:T.amber,marginBottom:6}}>2× Carbs · 2 Meals (Trigili)</div>
-                Add 200g rice or potato to Meal 2. Skip Meal 3. Resets leptin and glycogen. Prevents adaptive metabolic slowdown at week 8+.
+            {!isSunday&&(
+              <div style={{background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:14,padding:"12px 16px",marginTop:6}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#F59E0B",marginBottom:4}}>Sunday Refeed Protocol</div>
+                <div style={{fontSize:13,color:"rgba(255,255,255,0.55)",lineHeight:1.6}}>2× carbs · Add 200g rice or potato to Meal 2. Resets leptin + glycogen. Prevents adaptive metabolic slowdown at week 8+.</div>
               </div>
-            </Card>
+            )}
 
           </div>
         );
@@ -2903,6 +3419,12 @@
       const [suppOpen, setSuppOpen] = useState(false);
       const [dailySuppOpen, setDailySuppOpen] = useState(false);
       const [dietOpen, setDietOpen] = useState({});
+      const [savedDoses, setSavedDoses] = useState(() => LS.get("savedDoses", {}));
+      const saveDose = (peptideName, data) => {
+        const next = {...savedDoses, [peptideName]: data};
+        setSavedDoses(next);
+        LS.set("savedDoses", next);
+      };
 
 
       const activeTab = showMore ? "more" : tab;
@@ -3061,6 +3583,5 @@
       if (loading) { loading.classList.add('hide'); setTimeout(() => loading.remove(), 400); }
     }, 800);
   </script>
-
 </body>
 </html>
