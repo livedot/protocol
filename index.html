@@ -893,7 +893,6 @@
 
     const TABS = [
       {id:"daily",    label:"Today",       icon:"today"},
-      {id:"weekly",   label:"Weekly",      icon:"weekly"},
       {id:"blending", label:"Blending",    icon:"blending"},
       {id:"cycle",    label:"Cycle & Labs",icon:"cycle"},
       {id:"synergy",  label:"Stack",       icon:"stack"},
@@ -1671,45 +1670,50 @@
           <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>RECONSTITUTION CALCULATOR</div>
           <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px",marginBottom:12}}>
             <div style={{fontSize:13,fontWeight:600,color:"#fff",marginBottom:4}}>Select Peptide</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,0.65)",marginBottom:16}}>Choose what you are reconstituting</div>
-            <div onClick={()=>setShowSearch(true)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.07)",border:`1px solid ${peptide?"rgba(52,211,153,0.35)":"rgba(255,255,255,0.12)"}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-              {peptide
-                ? <span style={{fontSize:13,fontWeight:600,color:"#F59E0B"}}>{peptide.name}</span>
-                : <span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>e.g. BPC-157, Retatrutide…</span>}
-              <span style={{color:"rgba(255,255,255,0.65)",fontSize:17}}>›</span>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.65)",marginBottom:12}}>Choose what you are reconstituting</div>
+            {/* Inline search + dropdown */}
+            <div style={{position:"relative"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.07)",border:`1px solid ${showSearch?"rgba(99,102,241,0.5)":peptide?"rgba(52,211,153,0.35)":"rgba(255,255,255,0.12)"}`,borderRadius:showSearch?"12px 12px 0 0":12,padding:"12px 14px",transition:"border-color 0.15s"}}>
+                <Icon name="calculator" size={15} color="rgba(255,255,255,0.4)"/>
+                <input
+                  value={showSearch ? search : (peptide ? peptide.name : "")}
+                  onFocus={()=>setShowSearch(true)}
+                  onChange={e=>{setSearch(e.target.value);setShowSearch(true);}}
+                  placeholder="Search peptides…"
+                  style={{flex:1,background:"transparent",border:"none",outline:"none",fontSize:15,color:peptide&&!showSearch?"#F59E0B":"#fff",fontWeight:peptide&&!showSearch?600:400}}
+                />
+                {peptide && !showSearch
+                  ? <span style={{fontSize:12,color:"#34D399",fontWeight:700}}>✓</span>
+                  : showSearch && search
+                    ? <span onClick={()=>{setSearch("");}} style={{fontSize:14,color:"rgba(255,255,255,0.4)",cursor:"pointer",padding:"0 2px"}}>✕</span>
+                    : <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>›</span>
+                }
+              </div>
+              {/* Dropdown list */}
+              {showSearch&&(
+                <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1E3558",borderRadius:"0 0 12px 12px",border:"1px solid rgba(99,102,241,0.4)",borderTop:"none",zIndex:100,maxHeight:220,overflowY:"auto"}}>
+                  {filteredPeptides.length === 0
+                    ? <div style={{padding:"14px 16px",fontSize:13,color:"rgba(255,255,255,0.4)"}}>No matches</div>
+                    : filteredPeptides.map(p=>(
+                        <div key={p.name} onClick={()=>{setPeptide(p);setShowSearch(false);setSearch("");if(p.recDose){setDoseStr(p.recDose);setDoseUnit(p.recUnit==="mg"?"mg":"mcg");}}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",WebkitTapHighlightColor:"transparent",background:peptide?.name===p.name?"rgba(99,102,241,0.15)":"transparent"}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                              <span style={{fontSize:14,fontWeight:500,color:"#fff"}}>{p.name}</span>
+                              {p.recDose&&<span style={{fontSize:12,color:"#F5A94A",background:"rgba(245,169,74,0.12)",padding:"2px 7px",borderRadius:5,flexShrink:0}}>★ {p.recDose} {p.recUnit}</span>}
+                            </div>
+                            <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>{p.desc}</div>
+                          </div>
+                          {peptide?.name===p.name&&<span style={{color:"#34D399",fontSize:14,marginLeft:10}}>✓</span>}
+                        </div>
+                      ))
+                  }
+                </div>
+              )}
             </div>
+            {/* Tap outside to close */}
+            {showSearch&&<div style={{position:"fixed",inset:0,zIndex:99}} onClick={()=>{setShowSearch(false);setSearch("");}}/>}
           </div>
           {ctaBtn("Select Peptide →", ()=>setStep(1), !!peptide)}
-
-          {/* Search sheet */}
-          {showSearch&&(
-            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:2000,display:"flex",alignItems:"flex-end"}} onClick={()=>setShowSearch(false)}>
-              <div style={{background:"#1E3558",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"80vh",display:"flex",flexDirection:"column",paddingBottom:"env(safe-area-inset-bottom)"}} onClick={e=>e.stopPropagation()}>
-                <div style={{width:40,height:4,borderRadius:2,background:"rgba(255,255,255,0.25)",margin:"12px auto 0"}}/>
-                <div style={{padding:"14px 16px 10px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid rgba(255,255,255,0.1)"}}>
-                  <Icon name="calculator" size={16} color="rgba(255,255,255,0.55)"/>
-                  <input autoFocus value={search} onChange={e=>setSearch(e.target.value)}
-                    placeholder="Search peptides…"
-                    style={{flex:1,background:"transparent",border:"none",outline:"none",fontSize:17,color:"#fff"}}/>
-                  {search&&<span onClick={()=>setSearch("")} style={{fontSize:15,color:"rgba(255,255,255,0.55)",cursor:"pointer"}}>✕</span>}
-                </div>
-                <div style={{overflowY:"auto",flex:1}}>
-                  {filteredPeptides.map(p=>(
-                    <div key={p.name} onClick={()=>{setPeptide(p);setShowSearch(false);setSearch("");if(p.recDose){setDoseStr(p.recDose);setDoseUnit(p.recUnit==="mg"?"mg":"mcg");}}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px",borderBottom:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",WebkitTapHighlightColor:"transparent",background:peptide?.name===p.name?"rgba(99,102,241,0.15)":"transparent"}}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                          <span style={{fontSize:15,fontWeight:500,color:"#fff"}}>{p.name}</span>
-                          {p.recDose&&<span style={{fontSize:13,color:"#F5A94A",background:"rgba(245,169,74,0.12)",padding:"2px 8px",borderRadius:6,flexShrink:0}}>★ {p.recDose} {p.recUnit}</span>}
-                        </div>
-                        <div style={{fontSize:13,color:"rgba(255,255,255,0.55)"}}>{p.desc}</div>
-                      </div>
-                      {peptide?.name===p.name&&<Icon name="calculator" size={18} color="#34D399" style={{marginLeft:12,flexShrink:0}}/>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       );
 
@@ -2824,20 +2828,6 @@
       // ─── Blending ─────────────────────────────────────────────────────────────
       const renderBlending = () => (
         <div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:24}}>
-            {[
-              {n:"3",sub:"Standard days",color:T.cyan},
-              {n:"4",sub:"Epithalon cycle",color:T.violet},
-              {n:"4–5",sub:"Mon / Wed / Fri",color:T.amber},
-              {n:"5",sub:"Monday max",color:T.rose},
-            ].map((b,i)=>(
-              <div key={i} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px"}}>
-                <div style={{fontSize:28,fontWeight:700,color:b.color,lineHeight:1,marginBottom:4}}>{b.n}</div>
-                <div style={{fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.75)"}}>{b.sub}</div>
-              </div>
-            ))}
-          </div>
-
           <SectionLabel>INJECTION BLENDS</SectionLabel>
           {BLENDS.map((bl,i)=>(
             <Card key={i} style={{marginBottom:10}}>
@@ -3225,7 +3215,7 @@
         };
 
         return (
-          <div style={{padding:"16px"}}>
+          <div>
 
             {isSunday&&(
               <div style={{background:"rgba(245,158,11,0.12)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
@@ -3497,7 +3487,7 @@
           )}
 
           {/* Non-Today tab header — fixed, scroll-aware, with back button */}
-          {tab !== "daily" && !showMore && !["orders","tools","synergy"].includes(tab) && (
+          {tab !== "daily" && !showMore && !["tools","diet","blending"].includes(tab) && (
             <ScrollHeader
               tab={tab}
               tabs={TABS}
@@ -3513,8 +3503,8 @@
             tab === "daily" ? (
               <div style={{}}>{views[tab]?.()}</div>
             ) : tab === "tools" ? (
-              <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overscrollBehavior:"none"}}>{views[tab]?.()}</div>
-            ) : ["orders","synergy"].includes(tab) ? (
+              <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overscrollBehavior:"none",overflow:"hidden",height:`calc(100vh - 64px - env(safe-area-inset-bottom))`}}>{views[tab]?.()}</div>
+            ) : ["diet","blending"].includes(tab) ? (
               <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`}}>
                 {views[tab]?.()}
               </div>
