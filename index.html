@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -13,16 +14,18 @@
   <title>Protocol</title>
 
   <!-- PWA Manifest inline via JS -->
+
   <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Fat+Loss+%26+Recomp+Protocol%22%2C%22short_name%22%3A%22Protocol%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230F1923%22%2C%22theme_color%22%3A%22%230F1923%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%2520viewBox%253D'0%25200%2520192%2520192'%253E%253Crect%2520width%253D'192'%2520height%253D'192'%2520rx%253D'40'%2520fill%253D'%25230F1923'%252F%253E%253Ctext%2520x%253D'50%2525'%2520y%253D'55%2525'%2520font-size%253D'120'%2520text-anchor%253D'middle'%2520dominant-baseline%253D'middle'%253E%25E2%259A%25A1%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
 
   <!-- Apple touch icons (inline SVG as data URI) -->
+
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230F1923'/><text x='50%25' y='55%25' font-size='110' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>" />
 
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0; padding: 0;
-      background: #162844;
+      background: transparent;
       font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       overscroll-behavior: none;
@@ -43,7 +46,7 @@
       bottom: 0; left: 0; right: 0;
       height: calc(64px + env(safe-area-inset-bottom));
       padding-bottom: env(safe-area-inset-bottom);
-      background: rgba(16,32,58,0.96);
+      background: rgba(10,20,40,0.85);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -75,7 +78,7 @@
     .hero {
       background: radial-gradient(ellipse at 60% 0%, rgba(120,60,220,0.55) 0%, rgba(60,20,120,0.3) 45%, transparent 70%),
                   linear-gradient(180deg, #1A3558 0%, #162844 100%);
-      padding: calc(env(safe-area-inset-top) + 20px) 20px 28px;
+      padding: calc(env(safe-area-inset-top) + 20px) 20px 10px;
       position: relative;
       overflow: hidden;
     }
@@ -90,19 +93,19 @@
 
     /* ── Metric bubble ── */
     .metric-bubble {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      min-width: 64px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      min-width: 30px;
     }
     .metric-circle {
-      width: 64px; height: 64px; border-radius: 50%;
+      width: 30px; height: 30px; border-radius: 50%;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.1);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 1px;
     }
-    .metric-val { font-size: 15px; font-weight: 700; color: #fff; line-height: 1; }
-    .metric-sub { font-size: 8px; color: rgba(255,255,255,0.45); font-weight: 500; }
-    .metric-label { font-size: 11px; color: rgba(255,255,255,0.45); font-weight: 500; }
+    .metric-val { font-size: 10px; font-weight: 700; color: #fff; line-height: 1; }
+    .metric-sub { font-size: 5px; color: rgba(255,255,255,0.45); font-weight: 500; }
+    .metric-label { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 500; }
 
     /* ── Cards ── */
     .ios-card {
@@ -222,7 +225,7 @@
 
     /* ── Loading ── */
     #loading {
-      position: fixed; inset: 0; background: #162844;
+      position: fixed; inset: 0; background: transparent;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 16px;
       z-index: 500; transition: opacity 0.4s;
@@ -354,9 +357,167 @@
       cursor: pointer;
     }
 
+
+    /* ── Day / Night Background Scene ── */
+    #bg-scene {
+      position: fixed; inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      transition: all 0.9s cubic-bezier(.4,0,.2,1);
+    }
+    #root { position: relative; z-index: 1; }
+
+    /* Day mode — the sky shows through, cards need a darker base to stay readable */
+    body.day-mode #root::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background: rgba(8, 18, 40, 0.5);
+      pointer-events: none;
+    }
+
+    /* Day */
+    body.day-mode #bg-scene {
+      background:
+        radial-gradient(ellipse 80% 55% at 12% 8%,  #c6e8f9 0%, transparent 52%),
+        radial-gradient(ellipse 55% 45% at 88% 82%, #aad9f2 0%, transparent 52%),
+        radial-gradient(ellipse 50% 65% at 52% 48%, #d8eefb 0%, transparent 68%),
+        linear-gradient(158deg, #e2f4fd 0%, #bfe2f5 42%, #9dcfec 100%);
+    }
+    body.night-mode #bg-scene {
+      background:
+        radial-gradient(ellipse 70% 55% at 20% 15%,  #0d1f45 0%, transparent 55%),
+        radial-gradient(ellipse 55% 50% at 82% 78%, #0a1830 0%, transparent 55%),
+        linear-gradient(168deg, #07101f 0%, #0d1e3d 45%, #091528 100%);
+    }
+
+    /* Orbs */
+    .bg-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(70px); animation: bgDrift linear infinite;
+    }
+    body.day-mode .bg-orb-1 { width:460px;height:460px;background:#93d0ee;top:-120px;left:-100px;animation-duration:24s;opacity:0.4; }
+    body.day-mode .bg-orb-2 { width:320px;height:320px;background:#6dbfe0;bottom:-80px;right:4%;animation-duration:19s;animation-delay:-8s;opacity:0.4; }
+    body.day-mode .bg-orb-3 { width:220px;height:220px;background:#b0dcf4;top:38%;left:62%;animation-duration:28s;animation-delay:-14s;opacity:0.4; }
+    body.night-mode .bg-orb-1 { width:500px;height:500px;background:#1a3a7c;top:-150px;left:-120px;animation-duration:26s;opacity:0.28; }
+    body.night-mode .bg-orb-2 { width:360px;height:360px;background:#102a60;bottom:-100px;right:3%;animation-duration:21s;animation-delay:-9s;opacity:0.28; }
+    body.night-mode .bg-orb-3 { width:250px;height:250px;background:#1e3a72;top:35%;left:58%;animation-duration:30s;animation-delay:-16s;opacity:0.28; }
+
+    @keyframes bgDrift {
+      0%   { transform: translate(0,0) scale(1); }
+      33%  { transform: translate(20px,-26px) scale(1.04); }
+      66%  { transform: translate(-14px,16px) scale(0.97); }
+      100% { transform: translate(0,0) scale(1); }
+    }
+
+    /* Sun */
+    .bg-sun {
+      position:absolute; top:52px; right:80px;
+      width:72px; height:72px; border-radius:50%;
+      background: radial-gradient(circle at 40% 38%, #fffbe0, #ffd84d 55%, #ffb830);
+      box-shadow: 0 0 0 14px rgba(255,214,60,0.13), 0 0 0 30px rgba(255,200,40,0.07), 0 0 60px rgba(255,200,40,0.25);
+      animation: bgSunPulse 5s ease-in-out infinite;
+      transition: opacity 0.9s;
+    }
+    body.night-mode .bg-sun { opacity:0; }
+    @keyframes bgSunPulse {
+      0%,100% { box-shadow: 0 0 0 14px rgba(255,214,60,0.13),0 0 0 30px rgba(255,200,40,0.07),0 0 60px rgba(255,200,40,0.25); }
+      50%      { box-shadow: 0 0 0 18px rgba(255,214,60,0.16),0 0 0 38px rgba(255,200,40,0.09),0 0 80px rgba(255,200,40,0.32); }
+    }
+
+    /* Clouds */
+    .bg-cloud {
+      position:absolute; border-radius:999px;
+      background:rgba(255,255,255,0.72); filter:blur(2px);
+      animation: bgCloudDrift linear infinite;
+      transition: opacity 0.9s;
+    }
+    body.night-mode .bg-cloud { opacity:0!important; }
+    .bg-cloud::before,.bg-cloud::after { content:'';position:absolute;background:inherit;border-radius:999px; }
+    .bg-cloud-1 { width:160px;height:44px;top:110px;left:-180px;animation-duration:60s; }
+    .bg-cloud-1::before { width:80px;height:60px;top:-28px;left:24px; }
+    .bg-cloud-1::after  { width:55px;height:45px;top:-18px;left:70px; }
+    .bg-cloud-2 { width:110px;height:32px;top:200px;left:-140px;animation-duration:80s;animation-delay:-25s;opacity:0.55; }
+    .bg-cloud-2::before { width:60px;height:45px;top:-22px;left:16px; }
+    .bg-cloud-2::after  { width:40px;height:32px;top:-12px;left:52px; }
+    .bg-cloud-3 { width:90px;height:26px;top:300px;left:-120px;animation-duration:70s;animation-delay:-40s;opacity:0.45; }
+    .bg-cloud-3::before { width:50px;height:38px;top:-18px;left:12px; }
+    .bg-cloud-3::after  { width:32px;height:26px;top:-10px;left:40px; }
+    @keyframes bgCloudDrift {
+      from { transform:translateX(0); }
+      to   { transform:translateX(calc(100vw + 220px)); }
+    }
+
+    /* Moon */
+    .bg-moon {
+      position:absolute; top:48px; right:90px;
+      width:64px; height:64px; border-radius:50%;
+      background: radial-gradient(circle at 38% 35%, #f8f4e8, #e8dfc0 55%, #c8ba90);
+      box-shadow: 0 0 0 1px rgba(240,230,190,0.2),0 0 30px rgba(220,205,160,0.2),0 0 70px rgba(180,165,110,0.12);
+      overflow:hidden; opacity:0; transition:opacity 0.9s;
+    }
+    body.night-mode .bg-moon { opacity:1; }
+    .bg-moon::after {
+      content:''; position:absolute; top:-8px; right:-8px;
+      width:62px; height:62px; border-radius:50%;
+      background:#0d1e3d; box-shadow:-4px 4px 0 2px #0d1e3d;
+    }
+
+    /* Stars */
+    .bg-stars { position:absolute;inset:0;opacity:0;transition:opacity 0.9s; }
+    body.night-mode .bg-stars { opacity:1; }
+    .bg-star {
+      position:absolute; border-radius:50%; background:white;
+      animation: bgTwinkle ease-in-out infinite;
+    }
+    @keyframes bgTwinkle {
+      0%,100% { opacity:var(--op);transform:scale(1); }
+      50%      { opacity:calc(var(--op)*0.25);transform:scale(0.6); }
+    }
+
+    /* Aurora */
+    .bg-aurora {
+      position:absolute; bottom:0; left:-10%; width:120%; height:55%;
+      background: linear-gradient(180deg,transparent 0%,rgba(30,80,160,0.08) 30%,rgba(20,120,100,0.06) 55%,rgba(60,40,140,0.07) 75%,transparent 100%);
+      filter:blur(28px); animation:bgAurora 12s ease-in-out infinite alternate;
+      opacity:0; transition:opacity 0.9s;
+    }
+    body.night-mode .bg-aurora { opacity:1; }
+    @keyframes bgAurora {
+      0%   { transform:skewX(-4deg) scaleY(1);opacity:0.7; }
+      50%  { transform:skewX(3deg) scaleY(1.08);opacity:1; }
+      100% { transform:skewX(-2deg) scaleY(0.95);opacity:0.6; }
+    }
+
+    /* Grain overlay */
+    .bg-grain {
+      position:fixed; inset:-50%; width:200%; height:200%;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C%2Fsvg%3E");
+      opacity:0.025; pointer-events:none;
+      animation:bgGrain 0.4s steps(1) infinite; z-index:2;
+    }
+    @keyframes bgGrain {
+      0%  { transform:translate(0,0); }
+      25% { transform:translate(-2%,-1%); }
+      50% { transform:translate(1%,2%); }
+      75% { transform:translate(2%,-2%); }
+    }
+
   </style>
+
 </head>
 <body>
+  <!-- Day/Night Background Scene -->
+  <div id="bg-scene">
+    <div class="bg-moon"></div>
+    <div class="bg-aurora"></div>
+    <div class="bg-stars" id="bg-stars"></div>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+  </div>
+  <!-- Dark overlay between scene and app — opacity controlled by JS -->
+  <div id="bg-overlay" style="position:fixed;inset:0;z-index:0;pointer-events:none;transition:background 0.9s;"></div>
+  <div class="bg-grain"></div>
   <div id="pwa-status-bar"></div>
   <div id="loading">
     <div class="l-icon">⚡</div>
@@ -365,6 +526,7 @@
   <div id="root"></div>
 
   <!-- Install banner -->
+
   <div id="install-banner">
     <div class="ib-icon">⚡</div>
     <div class="ib-text">
@@ -376,6 +538,7 @@
   </div>
 
   <!-- iOS install overlay -->
+
   <div id="ios-install">
     <div class="ios-overlay-card">
       <div class="ios-title">📱 Add to Home Screen</div>
@@ -387,17 +550,60 @@
     </div>
   </div>
 
+  <!-- Day/Night Background Logic -->
+
+  <script>
+    // Generate stars
+    const bgStars = document.getElementById('bg-stars');
+    for (let i = 0; i < 140; i++) {
+      const s = document.createElement('div');
+      s.className = 'bg-star';
+      const size = Math.random() * 2.4 + 0.6;
+      const op   = Math.random() * 0.6 + 0.25;
+      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--op:${op};opacity:${op};animation-duration:${2.5+Math.random()*4}s;animation-delay:${-Math.random()*5}s;`;
+      bgStars.appendChild(s);
+    }
+
+    function setBgMode(mode) {
+      document.body.classList.remove('day-mode','night-mode');
+      document.body.classList.add(mode === 'night' ? 'night-mode' : 'day-mode');
+      const overlay = document.getElementById('bg-overlay');
+      if (overlay) overlay.style.background = mode === 'night'
+        ? 'rgba(7, 14, 28, 0.72)'
+        : 'rgba(8, 20, 45, 0.45)';
+      localStorage.setItem('bgMode', mode);
+      window._bgMode = mode;
+    }
+    window.setBgMode = setBgMode;
+
+    // Auto-detect based on time, respect saved preference
+    const savedMode = localStorage.getItem('bgMode');
+    if (savedMode) {
+      setBgMode(savedMode);
+    } else {
+      const h = new Date().getHours();
+      setBgMode(h >= 20 || h < 6 ? 'night' : 'day');
+    }
+  </script>
+
   <!-- Firebase SDKs via cdnjs -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
 
   <!-- React + Babel via CDN -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 
   <!-- Firebase Init + Cloud Sync Layer -->
+
   <script>
     // ── Always initialize these globals first so app never crashes ──────────
     window._fbUid     = null;
@@ -471,6 +677,7 @@
   </script>
 
   <!-- PWA & Install Logic -->
+
   <script>
     // ── Service Worker Registration ──────────────────────────────────────────
     if ('serviceWorker' in navigator) {
@@ -559,6 +766,7 @@
   </script>
 
   <!-- The full React App -->
+
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
 
@@ -580,18 +788,19 @@
 
     // ─── SVG Icon System ──────────────────────────────────────────────────────────
     const ICONS = {
-      today:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+      today:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>,
       inventory:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
-      calculator:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>,
+      calculator:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="3"/><rect x="8" y="6" width="8" height="3" rx="1"/><circle cx="8.5" cy="13" r="0.5" fill="currentColor"/><circle cx="12" cy="13" r="0.5" fill="currentColor"/><circle cx="15.5" cy="13" r="0.5" fill="currentColor"/><circle cx="8.5" cy="17" r="0.5" fill="currentColor"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/><circle cx="15.5" cy="17" r="0.5" fill="currentColor"/></svg>,
       stack:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
-      more:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+      more:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+      settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
       weekly:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>,
-      blending: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>,
+      blending: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11l-4 5h14l-4-5V3"/></svg>,
       cycle:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
       exit:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       backup:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>,
       inject:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/></svg>,
-      meal:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
+      meal:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
       moon:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
       pill:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>,
       coffee:   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
@@ -631,14 +840,14 @@
 
     const WEEKLY_INJECTIONS = {
       1: [
-        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"SubQ",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
         {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Systemic tissue repair, anti-inflammatory, connective tissue recovery. Pairs with BPC-157 — BPC handles local/gut repair, TB-500 handles systemic.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       3: [
         {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Mid-week systemic repair dose — maintains connective tissue anti-inflammatory effect between Monday and Friday injections.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       5: [
-        {name:"Retatrutide",dose:"0.5–1mg → 2–4mg",method:"SubQ",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"SubQ",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
       ],
       0: [], 2: [], 4: [], 6: [],
     };
@@ -651,33 +860,67 @@
       3: {note:"TB-500 DAY", sub:"Recovery injection + standard protocol", color:C.teal},
       4: {note:"STANDARD PROTOCOL", sub:"No weekly injections today", color:C.muted},
       5: {note:"RETATRUTIDE DAY", sub:"Second weekly GLP-1/GIP/Glucagon dose", color:C.violet},
-      6: {note:"STANDARD PROTOCOL", sub:"No weekly injections today", color:C.muted},
+      6: {note:"REST DAY", sub:"No gym — morning blend at 8 AM", color:C.green},
     };
+
+
+    const BLENDS = [
+      {id:"pre-train", time:"5:30 AM",label:"Pre-Train Blend",icon:"inject",color:C.green,
+       items:[{text:"Mots-c — 5mg"},{text:"Selank — 100–200mcg"},{text:"L-Carnitine — 500mg–1g (standalone)"}],note:"Mots-c + Selank → one syringe. L-Carnitine standalone — DO NOT blend"},
+      {id:"post-train-a", time:"7:30 AM",label:"Post-Train Blend A",icon:"sun",color:C.amber,
+       items:[
+         {text:"BPC-157 — 250–500mcg"},
+         {text:"KPV — 500mcg–1mg"},
+         {text:"GHK-Cu — 1–2mg"},
+         {text:"5-Amino-1MQ — 50mg"},
+       ],note:"These four are pH-compatible and stable together."},
+      {id:"aod", time:"7:30 AM",label:"AOD-9604 (Standalone)",icon:"sun",color:C.amber,
+       items:[
+         {text:"AOD-9604 — 300mcg"},
+       ],note:"Standalone — separate syringe. pH-sensitive, degrades in blends. Must remain fasted + glucose low."},
+      {id:"weekly", time:"7:30 AM · Weekly",label:"Weekly Standalones",icon:"inject",color:C.rose,
+       items:[
+         {text:"Retatrutide — 0.5–1mg → 2–4mg", days:["Mon","Fri"], note:"Standalone — separate syringe"},
+         {text:"TB-500 — 2–2.5mg", days:["Mon","Wed"], note:"Standalone — separate syringe"},
+       ],note:"Each in its own syringe. Never blend Retatrutide or TB-500 with anything."},
+      {id:"evening", time:"Evening",label:"Evening Blend",icon:"moon",color:C.violet,
+       items:[{text:"Tesamorelin — 1–2mg"},{text:"Ipamorelin — 200–300mcg"},{text:"DSIP — 100–200mcg"}],note:"Tesamorelin + Ipamorelin + DSIP → one syringe. NAC + Astragalus oral."},
+      {id:"pre-sleep", time:"Pre-Sleep",label:"Epithalon (cycle only)",icon:"sleep",color:"#8B7FE8",
+       items:[{text:"Epithalon — 5–10mg"}],note:"Standalone — DO NOT blend with other compounds"},
+    ];
+
+    // Helper: get blend note by id for Today tab
+    const blendNote = (id) => BLENDS.find(b=>b.id===id)?.note || "";
 
     const DAILY = [
       { time:"5:30 AM", label:"Pre-Training — Fasted", icon:"inject", color:C.green, timeHour:5,
-        blend:"Mots-c + Selank → one syringe. L-Carnitine standalone — separate injection. Draw 21g, swap to 29–30g to inject.",
+        weekendTime:"8:00 AM", weekendHour:8, weekendLabel:"Morning Blend — Fasted",
+        blend:blendNote("pre-train"),
         items:[
           {name:"Mots-c",dose:"5mg",method:"SubQ/IM",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
           {name:"Selank",dose:"100–200mcg",method:"SubQ",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
           {name:"L-Carnitine",dose:"500mg–1g",method:"SubQ/IM",purpose:"Shuttles mobilized fatty acids into mitochondria — maximizes fat oxidation during fasted training",t:false,cycle:{type:"daily"}},
+          {name:"Alpha-GPC",dose:"300–600mg",method:"Oral",purpose:"Choline precursor — acetylcholine for mind-muscle connection + minor GH pulse stimulus. Synergizes with Selank for cognitive sharpness during fasted training",t:false,cycle:{type:"daily"}},
         ]},
       { time:"6:00 AM", label:"Training — Fasted", icon:"train", color:C.amber, timeHour:6, blend:null,
+        weekendSkip:false, weekendTime:"8:30 AM", weekendHour:8.5, weekendLabel:"Electrolytes — Fasted",
         items:[
           {name:"Electrolyte Cocktail",dose:"5g Na / 1g K / 500mg Mg per L",method:"Drink",purpose:"These peptides act as diuretics — if you're flat and weak it's a mineral deficiency, not a calorie deficiency",t:true,cycle:{type:"daily"}},
         ]},
       { time:"7:30 AM", label:"Post-Training — Before Coffee", icon:"sun", color:C.amber, timeHour:8,
-        blend:"AOD + BPC-157 + KPV + GHK-Cu + 5-Amino-1MQ → one syringe. NAC + Astragalus oral.",
+        weekendTime:"9:00 AM", weekendHour:9, weekendLabel:"Post-Blend — Still Fasted",
+        blend:"Blend A: BPC-157 + KPV + GHK-Cu + 5-Amino-1MQ → one syringe. AOD-9604 → separate syringe (pH-sensitive, keep fasted). NAC + Astragalus oral.",
         items:[
           {name:"AOD-9604",dose:"300mcg",method:"SubQ",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false,cycle:{type:"daily"}},
           {name:"BPC-157",dose:"250–500mcg",method:"SubQ",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false,cycle:{type:"weeks",on:6,off:3,note:"6 wks on / 3 wks off"}},
           {name:"KPV",dose:"500mcg–1mg",method:"SubQ",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
           {name:"GHK-Cu",dose:"1–2mg",method:"SubQ",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
           {name:"5-Amino-1MQ",dose:"50mg",method:"SubQ",purpose:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
-          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
+          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
           {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true,cycle:{type:"daily"}},
         ]},
       { time:"9:00–10:00 AM", label:"First Coffee", icon:"coffee", color:C.amber, timeHour:9, blend:null,
+        weekendTime:"10:00 AM", weekendHour:10,
         items:[
           {name:"Vitamin D3 + K2",dose:"10,000 IU",method:"With coffee",purpose:"Maintains testosterone production during a caloric deficit — fat-soluble, take with any fat source",t:false,cycle:{type:"daily"}},
         ]},
@@ -686,52 +929,34 @@
           {name:"TUDCA",dose:"250–500mg",method:"With meal",purpose:"Essential for bile flow — prevents liver sluggishness during rapid fat loss",t:true,cycle:{type:"daily"}},
           {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Lowers systemic inflammation — prevents cortisol belly",t:true,cycle:{type:"daily"}},
           {name:"P-5-P (Active B6)",dose:"50–100mg",method:"With meal",purpose:"Keeps prolactin in check — high prolactin causes water retention and a soft look",t:true,cycle:{type:"daily"}},
-          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
+          {name:"Methylfolate (5-MTHF)",dose:"400–800mcg",method:"With meal",purpose:"Active folate — methylation cycle, homocysteine clearance, neurotransmitter synthesis. Stacks with P-5-P as co-methylation factors",t:false,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"Meal 2", label:"Dinner (Carbs + Protein)", icon:"meal", color:C.teal, timeHour:17, blend:null,
         items:[
           {name:"Dihydroberberine",dose:"200mg",method:"With meal",purpose:"Potent GDA — forces glucose into muscle not fat, counters GH-driven insulin resistance",t:true,cycle:{type:"daily"}},
           {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Second dose — split across meals for better absorption and sustained anti-inflammatory effect",t:true,cycle:{type:"daily"}},
-          {name:"Digestive Enzymes",dose:"Protease-heavy",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"2–3 hrs After Dinner", label:"Evening Blend", icon:"moon", color:C.violet, timeHour:20,
-        blend:"Tesamorelin + Ipamorelin + DSIP → one syringe. NAC + Astragalus oral.",
+        blend:blendNote("evening"),
         items:[
           {name:"Tesamorelin",dose:"1–2mg",method:"SubQ",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false,cycle:{type:"daily"}},
           {name:"Ipamorelin",dose:"200–300mcg",method:"SubQ",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
           {name:"DSIP",dose:"100–200mcg",method:"SubQ",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
-          {name:"NAC",dose:"600mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true,cycle:{type:"daily"}},
+          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true,cycle:{type:"daily"}},
           {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Second daily dose — kidney protection, telomere support",t:true,cycle:{type:"daily"}},
         ]},
-      { time:"30–60 Min Before Bed", label:"Pre-Sleep", icon:"sleep", color:"#5B4FCF", timeHour:22,
-        blend:"Epithalon standalone SubQ. Orals separate.",
+      { time:"30–60 Min Before Bed", label:"Pre-Sleep", icon:"sleep", color:"#8B7FE8", timeHour:22,
+        blend:blendNote("pre-sleep"),
         items:[
           {name:"Epithalon",dose:"5–10mg",method:"SubQ",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
+          {name:"Myo-Inositol",dose:"2–4g",method:"Oral",purpose:"Insulin sensitizer + cortisol modulator — overnight glucose homeostasis, blunts morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning",t:false,cycle:{type:"daily"}},
           {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false,cycle:{type:"daily"}},
           {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
           {name:"Melatonin",dose:"0.5–1mg",method:"Oral",purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse",t:false,cycle:{type:"daily"}},
         ]},
     ];
-
-    const BLENDS = [
-      {time:"5:30 AM",label:"Pre-Train Blend",icon:"inject",color:C.green,
-       items:[{text:"Mots-c — 5mg"},{text:"Selank — 100–200mcg"},{text:"L-Carnitine — 500mg–1g (standalone)"}],note:"Mots-c + Selank → one syringe. L-Carnitine standalone — separate syringe, DO NOT blend"},
-      {time:"7:30 AM",label:"Post-Train Blend",icon:"sun",color:C.amber,
-       items:[
-         {text:"AOD-9604 — 300mcg"},
-         {text:"BPC-157 — 250–500mcg"},
-         {text:"KPV — 500mcg–1mg"},
-         {text:"GHK-Cu — 1–2mg"},
-         {text:"5-Amino-1MQ — 50mg"},
-         {text:"Retatrutide — 0.5–1mg → 2–4mg", days:["Mon","Fri"], note:"Standalone — separate syringe"},
-         {text:"TB-500 — 2–2.5mg", days:["Mon","Wed"], note:"Standalone — separate syringe"},
-       ],note:"Draw 21g → swap to 29–30g injection needle"},
-      {time:"Evening",label:"Evening Blend",icon:"moon",color:C.violet,
-       items:[{text:"Tesamorelin — 1–2mg"},{text:"Ipamorelin — 200–300mcg"},{text:"DSIP — 100–200mcg"}],note:"Draw 21g → swap to 29–30g injection needle"},
-      {time:"Pre-Sleep",label:"Epithalon (cycle only)",icon:"sleep",color:"#5B4FCF",
-       items:[{text:"Epithalon — 5–10mg"}],note:"Standalone — DO NOT blend with other compounds"},
-    ];
-
     const SUPPLIES = [
       {item:"Luer Lock Syringe",spec:"1ml barrel",use:"Primary syringe — screw-on needle allows safe swapping between vials"},
       {item:"Draw Needle",spec:"21g × 1\"",use:"Drawing from vials only — swap before injecting to stay sharp"},
@@ -767,6 +992,12 @@
        purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ."},
       {name:"Melatonin",dose:"0.5–1mg",timing:"90min pre-sleep",cat:"Sleep onset",t:false,
        purpose:"Low dose only — higher doses fragment sleep and blunt the Tesamorelin + Ipamorelin GH pulse."},
+      {name:"Alpha-GPC",dose:"300–600mg",timing:"Pre-Train (5:30 AM)",cat:"Cognitive",t:false,
+       purpose:"Choline precursor — raises acetylcholine for mind-muscle connection and cognitive sharpness during fasted training. Also stimulates a minor GH pulse, synergizing with the morning injection window."},
+      {name:"Methylfolate (5-MTHF)",dose:"400–800mcg",timing:"Meal 1",cat:"Methylation",t:false,
+       purpose:"Active folate — supports the methylation cycle, clears homocysteine, and drives neurotransmitter synthesis. Co-factor alongside P-5-P at Meal 1."},
+      {name:"Myo-Inositol",dose:"2–4g",timing:"Pre-Sleep",cat:"Metabolic",t:false,
+       purpose:"Insulin sensitizer and cortisol modulator — supports overnight glucose homeostasis and blunts the morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning into muscle."},
     ];
 
     const PHASES = [
@@ -800,7 +1031,7 @@
       {layer:"Fat Loss",combo:"L-Carnitine",role:"Fatty acid transporter; shuttles mobilized free fatty acids across the mitochondrial membrane so they're actually burned, not re-esterified. Without it, AOD and the GH axis mobilize fat into circulation that never gets oxidized. Injectable pre-training maximizes muscle uptake and hardness.",color:C.teal},
       {layer:"Recovery",combo:"BPC-157 + TB-500",role:"BPC-157 — gut and tissue repair; interacts with GH receptors directly. TB-500 — systemic anti-inflammatory; rebuilds connective tissue and keeps training frequency sustainable.",color:C.teal},
       {layer:"Recovery",combo:"KPV",role:"NF-kB inhibitor; blocks gut inflammation at the source. The daily buffer that lets Retatrutide reach therapeutic dose without forcing a GI-driven taper.",color:C.teal},
-      {layer:"Sleep & CNS",combo:"Epithalon + DSIP + Selank",role:"Epithalon — restores pineal function; telomere support on a 10-day cycle. DSIP — deepens slow-wave sleep; the exact phase Tesamorelin fires in. Selank — cortisol modulator; stops fasted training from blunting the morning stack.",color:"#5B4FCF"},
+      {layer:"Sleep & CNS",combo:"Epithalon + DSIP + Selank",role:"Epithalon — restores pineal function; telomere support on a 10-day cycle. DSIP — deepens slow-wave sleep; the exact phase Tesamorelin fires in. Selank — cortisol modulator; stops fasted training from blunting the morning stack.",color:"#8B7FE8"},
       {layer:"Organ Protection",combo:"NAC + TUDCA",role:"NAC — glutathione precursor; neutralizes oxidative stress as visceral fat breaks down. TUDCA — bile acid; keeps ALT/AST in range on TRT + peptides long-term.",color:C.rose},
       {layer:"Organ Protection",combo:"Astragalus + P-5-P",role:"Astragalus — renal protection + telomerase activation; synergizes with Epithalon. P-5-P — active B6; controls prolactin on TRT without a pharmaceutical dopamine agonist.",color:C.green},
       {layer:"Organ Protection",combo:"Omega-3 + Dihydroberberine",role:"Omega-3 — keeps hs-CRP in range as fat mobilizes. Dihydroberberine — potent GDA; forces glucose into muscle not fat, directly countering GH-driven insulin resistance.",color:C.amber},
@@ -810,12 +1041,15 @@
       {layer:"Supplement Synergy",combo:"NAC × Rapid Fat Loss",role:"As visceral fat breaks down at accelerated rates on this stack, oxidative stress rises in direct proportion. NAC replenishes glutathione in real time — it's the cleanup crew for the metabolic debris the peptides generate. Twice daily because one dose doesn't last.",color:C.rose,supp:true},
       {layer:"Supplement Synergy",combo:"TUDCA × TRT + Peptides",role:"Running TRT plus multiple peptides long-term is a sustained liver load. TUDCA is the specific bile acid that prevents cholestasis and keeps ALT/AST markers clean. Think of it as the liver's dedicated maintenance dose — not optional on a 20-week cycle.",color:C.teal,supp:true},
       {layer:"Supplement Synergy",combo:"Omega-3 × Retatrutide",role:"Retatrutide aggressively mobilizes visceral fat, which releases stored inflammatory compounds as it breaks down. Omega-3 at 4g/day suppresses the resulting hs-CRP surge and prevents that inflammation from manifesting as cortisol belly — which would directly oppose the fat loss.",color:C.cyan,supp:true},
-      {layer:"Supplement Synergy",combo:"Magnesium × DSIP + Sleep Stack",role:"DSIP deepens slow-wave sleep, but slow-wave depth is physically gated by magnesium availability. Low magnesium = shallow sleep regardless of DSIP dose. Magnesium Citrate pre-sleep ensures DSIP has the substrate it needs to actually work. Also prevents the constipation that Retatrutide causes.",color:"#5B4FCF",supp:true},
+      {layer:"Supplement Synergy",combo:"Magnesium × DSIP + Sleep Stack",role:"DSIP deepens slow-wave sleep, but slow-wave depth is physically gated by magnesium availability. Low magnesium = shallow sleep regardless of DSIP dose. Magnesium Citrate pre-sleep ensures DSIP has the substrate it needs to actually work. Also prevents the constipation that Retatrutide causes.",color:"#8B7FE8",supp:true},
       {layer:"Supplement Synergy",combo:"P-5-P × Retatrutide GI Load",role:"Retatrutide slows gastric motility, which raises prolactin as a stress response. Elevated prolactin causes water retention and a soft, flat look — the opposite of what you want mid-cycle. P-5-P (active B6) is a natural dopamine agonist that keeps prolactin suppressed without pharmaceutical intervention.",color:C.violet,supp:true},
       {layer:"Supplement Synergy",combo:"Astragalus × High Protein + Peptides",role:"Running 1.5g protein per pound of bodyweight through the kidneys while simultaneously running multiple peptides is a significant GFR load. Astragalus specifically maintains kidney filtration rate under high protein conditions — it's the renal protection layer that most people skip and then wonder why their creatinine creeps up.",color:C.green,supp:true},
       {layer:"Supplement Synergy",combo:"Apigenin × 5-Amino-1MQ (NAD+ Stack)",role:"5-Amino-1MQ inhibits NNMT to preserve NAD+ in fat cells. Apigenin inhibits CD38, which is the primary enzyme that degrades NAD+ systemically. Together they hit NAD+ from both ends — preserving it at the cellular level and preventing its breakdown. The result is higher available NAD+ for the mitochondria that Mots-c is simultaneously activating.",color:C.green,supp:true},
       {layer:"Supplement Synergy",combo:"Digestive Enzymes × Retatrutide GI",role:"Retatrutide slows gastric emptying as part of its mechanism. Without support, protein-dense meals sit in the gut too long and ferment — producing the sulfur burps that signal GI distress. Protease-heavy digestive enzymes break down protein before it reaches that stage and keep GI symptoms manageable through dose escalation.",color:C.amber,supp:true},
       {layer:"Supplement Synergy",combo:"Vitamin D3 + K2 × TRT",role:"A caloric deficit suppresses testosterone production through a well-documented pathway. D3 at 10,000 IU directly supports the enzymatic steps in testosterone synthesis, acting as a co-factor. K2 directs the calcium D3 mobilizes into bone rather than arteries. Together they protect hormonal output during aggressive fat loss.",color:C.violet,supp:true},
+      {layer:"Supplement Synergy",combo:"Alpha-GPC × Pre-Train Window",role:"Alpha-GPC raises acetylcholine at the exact moment Selank is supporting BDNF and Mots-c is priming AMPK. The result is sharper neuromuscular recruitment during fasted training — better mind-muscle connection when blood glucose is low and the brain is running on ketones. Alpha-GPC also independently stimulates a minor GH pulse, adding a small anabolic signal on top of the morning peptide stack.",color:C.cyan,supp:true},
+      {layer:"Supplement Synergy",combo:"Methylfolate (5-MTHF) × P-5-P Methylation Stack",role:"P-5-P and 5-MTHF are co-factors in the same methylation pathway — P-5-P converts homocysteine to cystathionine, 5-MTHF drives the remethylation back to methionine. Running both at Meal 1 completes the methylation cycle at both ends. This matters on TRT because exogenous testosterone elevates homocysteine; clearing it protects cardiovascular markers and keeps SHBG in range.",color:C.green,supp:true},
+      {layer:"Supplement Synergy",combo:"Myo-Inositol × Dihydroberberine (Glucose Partitioning Stack)",role:"Dihydroberberine at Meal 3 forces glucose into muscle glycogen via GLUT4 upregulation. Myo-Inositol pre-sleep sustains insulin sensitization overnight via a separate IP3 signaling pathway. Together they cover glucose partitioning across the full evening-to-morning window — critical when running Tesamorelin + Ipamorelin, which drive mild insulin resistance as a side effect of elevating GH.",color:C.amber,supp:true},
     ];
 
     const EXIT_PROBLEM = {
@@ -835,14 +1069,16 @@
     const SOURCES = ["HE Peptides","zztai Peptide","Hebei Feisite"];
 
     const ORDERS = [
-      {name:"L-Carnitine",spec:"500mg×10",qty:"1",mg:"5g",cost:"~$40",status:"needed",src:"HE Peptides"},
+      {name:"L-Carnitine",spec:"600mg×10",qty:"1",mg:"6g",cost:"$55",status:"covered",src:"Hebei Feisite"},
       {name:"BPC-157",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$68",status:"covered",src:"HE Peptides"},
-      {name:"Tesamorelin",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$100",status:"topup",src:"HE Peptides"},
+      {name:"Tesamorelin",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$100",status:"topup",src:"HE Peptides"},
       {name:"Sermorelin",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$65",status:"backup",src:"HE Peptides"},
       {name:"TB-500",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$100",status:"covered",src:"HE Peptides"},
       {name:"Retatrutide",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$90",status:"covered",src:"HE Peptides"},
       {name:"Mots-c",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$60",status:"topup",src:"HE Peptides"},
       {name:"KPV",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$65",status:"covered",src:"HE Peptides"},
+      {name:"Bac Water",spec:"10ml×10",qty:"1",mg:"—",cost:"$15",status:"covered",src:"HE Peptides"},
+      {name:"ARA-290",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$63",status:"ordered",src:"HE Peptides"},
       {name:"Tesamorelin",spec:"20mg×10",qty:"1",mg:"200mg",cost:"$243",status:"covered",src:"zztai Peptide"},
       {name:"Mots-c",spec:"10mg×10",qty:"2",mg:"200mg",cost:"$146",status:"covered",src:"Hebei Feisite"},
       {name:"AOD-9604",spec:"10mg×10",qty:"1",mg:"100mg",cost:"$168",status:"covered",src:"Hebei Feisite"},
@@ -852,41 +1088,36 @@
       {name:"Selank",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$41",status:"covered",src:"Hebei Feisite"},
       {name:"5-Amino-1MQ",spec:"50mg×10",qty:"1",mg:"500mg",cost:"$98",status:"covered",src:"Hebei Feisite"},
       {name:"Bac Water",spec:"10ml×10",qty:"1",mg:"—",cost:"$18",status:"covered",src:"Hebei Feisite"},
-      {name:"GHK-Cu",spec:"50mg×20",qty:"1",mg:"1000mg",cost:"$68",status:"ordered",src:""},
-      {name:"Kisspeptin",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$50",status:"ordered",src:""},
+      {name:"GHK-Cu",spec:"50mg×10",qty:"2",mg:"1000mg",cost:"$68",status:"covered",src:"Hebei Feisite"},
+      {name:"Kisspeptin",spec:"5mg×10",qty:"1",mg:"50mg",cost:"$50",status:"covered",src:"Hebei Feisite"},
     ];
 
     const LOCAL_SUPPS = [
-      {name:"NAC",dose:"600mg–1200mg caps",freq:"Daily ×2",cost:"~$15–20/mo"},
-      {name:"TUDCA",dose:"250mg–500mg caps",freq:"Daily",cost:"~$25–35/mo"},
-      {name:"Omega-3 (High EPA)",dose:"4g EPA/DHA",freq:"Daily ×2",cost:"~$20–30/mo"},
-      {name:"Dihydroberberine",dose:"200mg caps",freq:"Daily",cost:"~$25–40/mo"},
-      {name:"Astragalus",dose:"3000mg–4000mg",freq:"Daily ×2",cost:"~$20–30/mo"},
-      {name:"P-5-P (Active B6)",dose:"50mg–100mg caps",freq:"Daily",cost:"~$10–15/mo"},
-      {name:"Vitamin D3 + K2",dose:"10,000 IU D3",freq:"Daily",cost:"~$10–15/mo"},
-      {name:"Digestive Enzymes",dose:"Protease-heavy",freq:"With every meal",cost:"~$20–30/mo"},
-      {name:"Magnesium Citrate",dose:"400mg–600mg",freq:"Nightly",cost:"~$10–15/mo"},
-      {name:"Apigenin",dose:"50mg caps",freq:"Nightly",cost:"~$10–20/mo"},
-      {name:"Melatonin",dose:"0.5–1mg",freq:"Nightly",cost:"~$5–10/mo"},
-      {name:"Electrolytes",dose:"5g Na / 1g K / 500mg Mg",freq:"Daily",cost:"~$20–30/mo"},
+      {name:"TUDCA",spec:"250mg · 60ct",serving:"1–2 caps",cost:"$19.94",brand:"Double Wood"},
+      {name:"Omega-3 (High EPA)",spec:"1250mg · 90ct",serving:"1 softgel",cost:"$22.36",brand:"Sports Research"},
+      {name:"Dihydroberberine",spec:"200mg · 60ct",serving:"1 cap",cost:"$24.95",brand:"Nutricost"},
+      {name:"Astragalus",spec:"20:1 Extract · 180ct",serving:"3 caps",cost:"$22.97",brand:"Zazzee"},
+      {name:"P-5-P (Active B6)",spec:"50mg · 240ct",serving:"1–2 caps",cost:"$16.95",brand:"Nutricost"},
+      {name:"Vitamin D3 + K2",spec:"10,000 IU · 60ct",serving:"1 softgel",cost:"$23.16",brand:"Sports Research"},
+      {name:"Digestive Enzymes",spec:"Similase · 180ct",serving:"1–2 caps",cost:"$49.75",brand:"Integrative Therapeutics"},
+      {name:"Magnesium Citrate",spec:"420mg · 240ct",serving:"1 cap",cost:"$17.95",brand:"Nutricost"},
+      {name:"Magnesium Glycinate",spec:"300mg · 500g powder",serving:"1 scoop",cost:"$20.97",brand:"BulkSupplements"},
+      {name:"Apigenin",spec:"50mg · 60ct",serving:"1 cap",cost:"$19.99",brand:"Nootropics Depot"},
+      {name:"Melatonin",spec:"0.5mg · 60ct",serving:"1 cap",cost:"$12.50",brand:"Pure Encapsulations"},
+      {name:"Electrolytes / Potassium",spec:"Potassium Chloride · 1kg",serving:"1 scoop",cost:"$21.97",brand:"BulkSupplements"},
+      {name:"NAC",spec:"500mg · 210ct",serving:"2 caps",cost:"$19.95",brand:"Double Wood"},
+      {name:"Alpha-GPC",spec:"—",serving:"—",cost:"—",brand:""},
+      {name:"Methylfolate (5-MTHF)",spec:"—",serving:"—",cost:"—",brand:""},
+      {name:"Myo-Inositol",spec:"—",serving:"—",cost:"—",brand:""},
     ];
 
     const SHOPPING_LIST = [
-      {cat:"Injection Supplies",item:"Luer Lock Syringes",spec:"1ml",qty:"100 pack",where:"Amazon / pharmacy",est:"~$15–25",note:"Core syringe — must be Luer Lock for needle swapping",priority:"critical"},
-      {cat:"Injection Supplies",item:"Draw Needles",spec:"21g × 1\"",qty:"100 pack",where:"Amazon / medical supply",est:"~$10–15",note:"Drawing from vials only — never inject with these",priority:"critical"},
-      {cat:"Injection Supplies",item:"Injection Needles",spec:"29g or 30g × 0.5\"",qty:"100 pack",where:"Amazon / pharmacy",est:"~$10–15",note:"Fresh needle every injection — SubQ pinch technique",priority:"critical"},
-      {cat:"Injection Supplies",item:"Alcohol Swabs",spec:"Sterile prep pads",qty:"200 pack",where:"Amazon / pharmacy",est:"~$5–8",note:"Wipe vial tops + injection site before and after",priority:"critical"},
+      {cat:"Injection Supplies",item:"Luer Lock Syringes",spec:"1ml",qty:"100 pack",where:"EasyTouch",est:"$20.99",note:"Core syringe — must be Luer Lock for needle swapping",priority:"critical"},
+      {cat:"Injection Supplies",item:"Draw Needles 21g",spec:"21g × 1\"",qty:"100 pack",where:"Garfily",est:"$9.99",note:"Drawing from vials only — never inject with these",priority:"critical"},
+      {cat:"Injection Supplies",item:"Injection Needles 32g",spec:"32g × 0.5\"",qty:"100 pack",where:"Cailos",est:"$16.99",note:"Fresh needle every injection — SubQ pinch technique",priority:"critical"},
       {cat:"Injection Supplies",item:"Sharps Container",spec:"1–2 quart",qty:"1",where:"Amazon / pharmacy",est:"~$5–10",note:"Required — never recap used needles, never bin loose",priority:"critical"},
       {cat:"Injection Supplies",item:"Bacteriostatic Water",spec:"30ml vials",qty:"4–6 vials",where:"Amazon / compounding pharmacy",est:"~$15–25",note:"For reconstituting all lyophilized peptides — not sterile water",priority:"critical"},
       {cat:"Injection Supplies",item:"Insulin Syringes (backup)",spec:"0.5ml / 31g",qty:"50 pack",where:"Walmart / pharmacy counter",est:"~$10–15",note:"Backup option for single low-volume doses",priority:"optional"},
-      {cat:"Storage & Handling",item:"Mini Fridge (dedicated)",spec:"Countertop 6L+",qty:"1",where:"Amazon / Walmart",est:"~$30–60",note:"Dedicated peptide fridge — keep 2–8°C, no freeze",priority:"recommended"},
-      {cat:"Storage & Handling",item:"Marker / label tape",spec:"Any fine-tip",qty:"1",where:"Any store",est:"~$3–5",note:"Label every vial with name, recon date, concentration",priority:"recommended"},
-      {cat:"Storage & Handling",item:"Small cooler bag",spec:"Insulated",qty:"1",where:"Amazon",est:"~$10–20",note:"Travel — keeps peptides stable for 6–8h in transit",priority:"optional"},
-      {cat:"Measurement",item:"Insulin pin caps / vial stoppers",spec:"Rubber septa stoppers",qty:"20 pack",where:"Amazon / medical supply",est:"~$8–12",note:"Re-seal partially used vials between sessions",priority:"recommended"},
-      {cat:"Measurement",item:"Digital milligram scale",spec:"0.001g precision",qty:"1",where:"Amazon",est:"~$20–35",note:"Verify BacWater volumes if mixing manually",priority:"optional"},
-      {cat:"Safety & Hygiene",item:"Nitrile gloves",spec:"Powder-free, S/M/L",qty:"50 pack",where:"Amazon / pharmacy",est:"~$8–12",note:"Clean prep surface — reduces contamination risk",priority:"recommended"},
-      {cat:"Safety & Hygiene",item:"Sterile gauze pads",spec:"2×2\" sterile",qty:"50 pack",where:"Amazon / pharmacy",est:"~$5–8",note:"Post-injection blot — gentler than swab on injection site",priority:"optional"},
-      {cat:"Safety & Hygiene",item:"Isopropyl alcohol 70%",spec:"70% IPA spray or bottle",qty:"1 bottle",where:"Pharmacy / Amazon",est:"~$5–8",note:"Wipe prep surface before laying out supplies",priority:"recommended"},
     ];
 
     const PEPTIDE_LIST = ["AOD-9604","BPC-157","DSIP","Epithalon","Ipamorelin","KPV","L-Carnitine","Mots-c","Retatrutide","Selank","TB-500","Tesamorelin","5-Amino-1MQ","Sermorelin"];
@@ -894,23 +1125,23 @@
     const TABS = [
       {id:"daily",    label:"Today",       icon:"today"},
       {id:"blending", label:"Blending",    icon:"blending"},
-      {id:"cycle",    label:"Cycle & Labs",icon:"cycle"},
+      {id:"timeline",  label:"Timeline",    icon:"cycle"},
       {id:"synergy",  label:"Stack",       icon:"stack"},
       {id:"exit",     label:"Taper Off",   icon:"exit"},
       {id:"orders",   label:"Inventory",   icon:"inventory"},
       {id:"tools",    label:"Calculator",  icon:"calculator"},
       {id:"diet",     label:"Diet",        icon:"meal"},
-      {id:"backup",   label:"Backup",      icon:"backup"},
+      {id:"settings", label:"Settings",    icon:"settings"},
     ];
 
     // ─── Diet Plan Data ────────────────────────────────────────────────────────
     const DIET_MEALS = [
       {
-        id:"m1", time:"9:30 AM", label:"Meal 1 — Break Fast",
+        id:"m1", time:"9:30 AM", weekendTime:"10:00 AM", label:"Meal 1 — Break Fast",
         icon:"coffee", color:"#38BDF8",
-        note:"First meal after training and AOD window. High protein, low carb. Keep insulin low.",
+        note:"First meal after fasted window. High protein, low carb. Keep insulin low. On weekends — take with your coffee.",
         macros:{p:40,f:20,c:2,cal:350},
-        supps:[{name:"TUDCA",dose:"250–500mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"P-5-P",dose:"50–100mg"},{name:"Digestive Enzymes",dose:"Protease-heavy"}],
+        supps:[{name:"Vitamin D3+K2",dose:"10,000 IU",note:"With coffee"},{name:"TUDCA",dose:"250–500mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"P-5-P",dose:"50–100mg"},{name:"Methylfolate",dose:"400–800mcg"},{name:"Digestive Enzymes",dose:"2 caps"}],
         options:[
           {
             label:"Option A — Eggs + Whites",
@@ -930,11 +1161,11 @@
         ]
       },
       {
-        id:"m2", time:"12:00–2:00 PM", label:"Meal 2 — Lunch / Stew",
+        id:"m2", time:"12:00–2:00 PM", weekendTime:"1:00–2:00 PM", label:"Meal 2 — Lunch / Stew",
         icon:"meal", color:"#34D399",
         note:"Your biggest protein hit. Beef or chicken stew. Keep carbs low here — save them for dinner.",
         macros:{p:63,f:12,c:12,cal:415},
-        supps:[{name:"Digestive Enzymes",dose:"Protease-heavy"}],
+        supps:[{name:"Digestive Enzymes",dose:"2 caps"}],
         options:[
           {
             label:"Option A — Beef Stew",
@@ -960,11 +1191,11 @@
         ]
       },
       {
-        id:"m3", time:"5:00–6:30 PM", label:"Meal 3 — Dinner (Carb Meal)",
+        id:"m3", time:"5:00–6:30 PM", weekendTime:"6:00–7:00 PM", label:"Meal 3 — Dinner (Carb Meal)",
         icon:"meal", color:"#F59E0B",
         note:"Carbs go here with Dihydroberberine. Must finish by 6:30 PM — needs 2+ hrs before evening injection at 9 PM.",
         macros:{p:51,f:9,c:49,cal:481},
-        supps:[{name:"Dihydroberberine",dose:"200mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"Digestive Enzymes",dose:"Protease-heavy"}],
+        supps:[{name:"Dihydroberberine",dose:"200mg"},{name:"Omega-3",dose:"2g EPA/DHA"},{name:"Digestive Enzymes",dose:"2 caps"}],
         options:[
           {
             label:"Option A — Chicken + Rice",
@@ -1066,7 +1297,7 @@
        compounds:[{name:"AOD-9604",note:"Requires fasted + low glucose state"},{name:"BPC-157",note:"Not fasting-sensitive"},{name:"KPV",note:"Not fasting-sensitive"},{name:"5-Amino-1MQ",note:"Enhanced in fasted metabolic state"}]},
       {id:"evening",label:"Evening Blend",icon:"🌙",color:C.violet,openHour:18,closeHour:24,blockIdx:5,
        compounds:[{name:"Tesamorelin",note:"GH pulse magnitude depends on sleep quality"},{name:"Ipamorelin",note:"Amplifies existing pulse — blunted if sleep-deprived"},{name:"DSIP",note:"Improves slow-wave sleep depth"}]},
-      {id:"pre-sleep",label:"Pre-Sleep",icon:"💤",color:"#5B4FCF",openHour:21,closeHour:24,blockIdx:6,
+      {id:"pre-sleep",label:"Pre-Sleep",icon:"💤",color:"#8B7FE8",openHour:21,closeHour:24,blockIdx:6,
        compounds:[{name:"Epithalon",note:"Pineal restoration — sleep dependent"},{name:"Magnesium Glycinate",note:"Supports slow-wave sleep"}]},
     ];
 
@@ -1126,50 +1357,69 @@
         color:highlight||t.text}}>{children}</td>;
     }
 
-    function InjectionTimer({ theme }) {
+    function InjectionTimer({ theme, chk={}, viewDay=0 }) {
       const t = theme || C;
       const [now, setNow] = useState(new Date());
       useEffect(() => { const ti = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(ti); }, []);
-      const schedule = [{label:"Pre-Train",hour:5,min:30},{label:"Post-Train",hour:7,min:30},{label:"Evening Blend",hour:20,min:0},{label:"Pre-Sleep",hour:22,min:0}];
+
+      const schedule = [
+        {label:"Pre-Train",    icon:"inject", color:"#34D399", hour:5,  min:30, closeHour:6,  blockIdx:0},
+        {label:"Post-Train",   icon:"sun",    color:"#F59E0B", hour:7,  min:30, closeHour:10, blockIdx:2},
+        {label:"Evening Blend",icon:"moon",   color:"#A78BFA", hour:20, min:0,  closeHour:24, blockIdx:6},
+        {label:"Pre-Sleep",    icon:"sleep",  color:"#8B5CF6", hour:22, min:0,  closeHour:24, blockIdx:7},
+      ];
+
       const todayMins = now.getHours()*60+now.getMinutes();
-      let next = null;
-      for (const s of schedule) { if (s.hour*60+s.min > todayMins) { next={...s,diff:s.hour*60+s.min-todayMins}; break; } }
-      if (!next) next={...schedule[0],diff:(24*60-todayMins)+schedule[0].hour*60};
-      const hrs=Math.floor(next.diff/60), mins=next.diff%60;
-      const weeklyToday = WEEKLY_INJECTIONS[now.getDay()]||[];
+      const curHour = now.getHours();
+
+      const enriched = schedule.map(s => {
+        const openMins = s.hour*60+s.min;
+        const closeMins = s.closeHour*60;
+        const isActive = curHour>=s.hour && curHour<s.closeHour;
+        const isPast   = todayMins >= closeMins;
+        const isUpcoming = !isActive && !isPast;
+        const blockItems = DAILY[s.blockIdx]?.items || [];
+        const checkedCount = blockItems.filter(it => chk[`${viewDay}-${s.blockIdx}-${it.name}`]).length;
+        // also count weekly injections in post-train block
+        const weeklyInjs = s.blockIdx===2 ? (WEEKLY_INJECTIONS[viewDay]||[]) : [];
+        const weeklyDone = weeklyInjs.filter((_,wi) => chk[`${viewDay}-weekly-${wi}`]).length;
+        const total = blockItems.length + weeklyInjs.length;
+        const done = checkedCount + weeklyDone;
+        return {...s, openMins, isActive, isPast, isUpcoming, done, total};
+      });
+
+      const nextWin = enriched.find(s=>s.isActive) || enriched.find(s=>s.isUpcoming) || enriched[0];
+      const diffMins = nextWin.openMins > todayMins ? nextWin.openMins - todayMins : (24*60 - todayMins) + nextWin.openMins;
+      const hrs = Math.floor(diffMins/60), mins = diffMins%60;
+
       return (
-        <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px",marginBottom:12}}>
-          <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:12}}>NEXT INJECTION</div>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-            <div>
-              <div style={{fontSize:42,fontWeight:700,color:"#fff",letterSpacing:"-2px",fontVariantNumeric:"tabular-nums",lineHeight:1}}>
-                {String(hrs).padStart(2,"0")}:{String(mins).padStart(2,"0")}
-              </div>
-              <div style={{fontSize:13,color:"rgba(255,255,255,0.75)",marginTop:4}}>{next.label}</div>
-            </div>
-            {weeklyToday.length>0&&(
-              <div style={{background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:10,padding:"10px 12px"}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#F87171",letterSpacing:"0.06em",marginBottom:4}}>WEEKLY TODAY</div>
-                {weeklyToday.map((w,i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:6}}>
-                    <div style={{width:6,height:6,borderRadius:"50%",background:w.color}}/>
-                    <span style={{fontSize:13,color:"#fff",fontWeight:500}}>{w.name}</span>
-                    <span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{w.dose}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {schedule.map((s,i)=>{
-              const sMins=s.hour*60+s.min; const done=sMins<=todayMins; const isNext=!done&&s.label===next.label;
+        <div style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:16,marginBottom:12,overflow:"hidden"}}>
+          <div style={{padding:"14px 16px 4px"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>NEXT INJECTION</div>
+            {enriched.map((s,i)=>{
+              const isNext = s.label === nextWin.label;
               return (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",flexShrink:0,
-                    background:done?"#34D399":isNext?"#F59E0B":"rgba(255,255,255,0.25)",
-                    boxShadow:isNext?"0 0 8px rgba(251,191,36,0.6)":"none"}}/>
-                  <span style={{fontSize:13,flex:1,color:done?"rgba(255,255,255,0.65)":isNext?"#fff":"rgba(255,255,255,0.75)",fontWeight:isNext?600:400,textDecoration:done?"line-through":"none"}}>{s.label}</span>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{s.hour>12?s.hour-12:s.hour}:{String(s.min).padStart(2,"0")} {s.hour<12?"AM":"PM"}</span>
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <div style={{width:32,height:32,borderRadius:9,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Icon name={s.icon} size={15} color={s.color}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                      <span style={{fontSize:13,fontWeight:isNext?600:400,color:s.isPast?"rgba(255,255,255,0.45)":isNext?"#fff":"rgba(255,255,255,0.75)",textDecoration:s.isPast?"line-through":"none"}}>{s.label}</span>
+                      {s.isActive&&<span style={{fontSize:11,fontWeight:700,color:s.color,background:`${s.color}18`,padding:"2px 6px",borderRadius:6}}>NOW</span>}
+                      {isNext&&!s.isActive&&<span style={{fontSize:11,fontWeight:700,color:"#F59E0B",background:"rgba(245,158,11,0.12)",padding:"2px 6px",borderRadius:6}}>NEXT · {hrs>0?`${hrs}h `:""}${mins}m</span>}
+                      {s.isPast&&s.done===s.total&&s.total>0&&<span style={{fontSize:11,color:"#34D399"}}>✓</span>}
+                      {s.isPast&&s.done<s.total&&<span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.35)"}}>missed</span>}
+                      {s.isUpcoming&&!isNext&&<span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>{s.hour>12?s.hour-12:s.hour}:{String(s.min).padStart(2,"0")} {s.hour<12?"AM":"PM"}</span>}
+                    </div>
+                    <div style={{height:4,background:"rgba(255,255,255,0.08)",borderRadius:2,overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:2,
+                        background: s.done===s.total&&s.total>0 ? "#34D399" : s.color,
+                        width: s.total>0 ? `${(s.done/s.total)*100}%` : "0%",
+                        transition:"width 0.3s"}}/>
+                    </div>
+                  </div>
+                  <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",flexShrink:0,minWidth:28,textAlign:"right"}}>{s.done}/{s.total}</span>
                 </div>
               );
             })}
@@ -1429,7 +1679,7 @@
       return (
         <>
           {showSync&&<HealthSyncModal onSync={handleSync} onClose={()=>setShowSync(false)}/>}
-          <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,marginBottom:12,overflow:"hidden"}}>
+          <div style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:16,marginBottom:12,overflow:"hidden"}}>
             {/* Header */}
             <div onClick={()=>setExpanded(p=>!p)} style={{display:"flex",alignItems:"center",gap:14,padding:"16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
               {/* Score ring */}
@@ -1448,49 +1698,23 @@
                   {lastSynced&&<span style={{fontSize:13,color:"#34D399",background:"rgba(52,211,153,0.12)",padding:"2px 7px",borderRadius:8}}><Icon name="backup" size={10} color="#34D399" style={{display:"inline-block",verticalAlign:"middle"}}/> {lastSynced}</span>}
                 </div>
                 <div style={{fontSize:13,fontWeight:500,color:bioColor,marginBottom:4}}>{statusText}</div>
-                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  {[{icon:"sleep",val:`${inputs.sleep}h`,s:sleepScore},{icon:"glucose",val:`${inputs.glucose}`,s:glucScore},{icon:"hrv",val:`${inputs.hrv}ms`,s:hrvScore},{icon:"train",val:`${inputs.lastMeal}h fast`,s:fastScore}].map((m,i)=>(
-                    <span key={i} style={{fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:4,
+                <div style={{display:"flex",gap:4,flexWrap:"nowrap",overflow:"hidden"}}>
+                  {[{icon:"sleep",val:`${inputs.sleep}h`,s:sleepScore},{icon:"glucose",val:`${inputs.glucose}`,s:glucScore},{icon:"hrv",val:`${inputs.hrv}ms`,s:hrvScore},{icon:"train",val:`${inputs.lastMeal}h`,s:fastScore}].map((m,i)=>(
+                    <span key={i} style={{fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:3,
                       color:m.s>70?"#34D399":m.s>40?"#F59E0B":"#F87171",
                       background:m.s>70?"rgba(52,211,153,0.1)":m.s>40?"rgba(251,191,36,0.1)":"rgba(248,113,113,0.1)",
-                      padding:"3px 8px",borderRadius:8}}><Icon name={m.icon} size={12}/>{m.val}</span>
+                      padding:"2px 6px",borderRadius:6,flexShrink:0}}><Icon name={m.icon} size={10}/>{m.val}</span>
                   ))}
                 </div>
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <button onClick={e=>{e.stopPropagation();setShowSync(true)}} style={{background:"rgba(56,189,248,0.1)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:8,padding:"7px 10px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
-                  <Icon name="backup" size={16} color="#38BDF8"/>
-                  <span style={{fontSize:13,fontWeight:700,color:"#38BDF8"}}>SYNC</span>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <button onClick={e=>{e.stopPropagation();setShowSync(true)}} style={{background:"rgba(56,189,248,0.1)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:8,padding:"5px 7px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <Icon name="backup" size={14} color="#38BDF8"/>
                 </button>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:expanded?"rotate(180deg)":"none",transition:"0.2s",color:"rgba(255,255,255,0.65)"}}>
                   <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-            </div>
-
-            {/* Injection windows */}
-            <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",padding:"12px 16px 4px"}}>
-              <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>INJECTION WINDOWS</div>
-              {winStatus.map((win,wi)=>(
-                <div key={wi} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                  <div style={{width:32,height:32,borderRadius:9,background:`${win.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <Icon name={win.icon} size={15} color={win.color}/>
-                  </div>
-                  <div style={{flex:1}}>
-                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                      <span style={{fontSize:13,fontWeight:500,color:win.isDone?"rgba(255,255,255,0.65)":win.isActive?"#fff":"rgba(255,255,255,0.75)"}}>{win.label}</span>
-                      {win.isActive&&<span style={{fontSize:13,fontWeight:700,color:win.color,background:`${win.color}18`,padding:"1px 6px",borderRadius:6}}>NOW</span>}
-                      {win.isPast&&win.isDone&&<span style={{fontSize:13,color:"#34D399"}}>✓ done</span>}
-                      {win.isPast&&!win.isDone&&<span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>missed</span>}
-                      {win.isUpcoming&&<span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{win.open>12?win.open-12:win.open}{win.open>=12?"pm":"am"}</span>}
-                    </div>
-                    <div style={{height:4,background:"rgba(255,255,255,0.12)",borderRadius:2,overflow:"hidden"}}>
-                      <div style={{height:"100%",borderRadius:2,background:win.isDone?"#34D399":win.isActive?win.color:"transparent",width:win.total>0?`${(win.checkedCount/win.total)*100}%`:"0"}}/>
-                    </div>
-                  </div>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.65)",flexShrink:0}}>{win.checkedCount}/{win.total}</span>
-                </div>
-              ))}
             </div>
 
             {/* Expanded bio inputs */}
@@ -1542,11 +1766,14 @@
       {name:"Tesamorelin",desc:"GHRH analog — FDA-validated visceral fat, nocturnal GH pulse",    recDose:"2",     recUnit:"mg"},
       {name:"5-Amino-1MQ",desc:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",       recDose:"50",    recUnit:"mg"},
       {name:"GHK-Cu",      desc:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory", recDose:"1",     recUnit:"mg"},
+      {name:"Alpha-GPC",   desc:"Choline precursor — acetylcholine, mind-muscle, minor GH pulse",         recDose:"300",   recUnit:"mg"},
+      {name:"Myo-Inositol",desc:"Insulin sensitizer + cortisol modulator — pre-sleep glucose support",    recDose:"2000",  recUnit:"mg"},
     ];
 
-    function ReconCalcWizard({ onSave, savedDoses={} }) {
+    function ReconCalcWizard({ onSave, onDelete, savedDoses={} }) {
       const [step, setStep] = useState(0);
       const [saved, setSaved] = useState(false);
+      const [editingName, setEditingName] = useState(null); // peptide name being edited
       const [peptide, setPeptide] = useState(null);
       const [search, setSearch] = useState("");
       const [showSearch, setShowSearch] = useState(false);
@@ -1665,7 +1892,19 @@
       );
 
       // ── STEP 0: Peptide picker ──────────────────────────────────────────────
-      if (step===0) return (
+      if (step===0) {
+        const savedEntries = Object.entries(savedDoses);
+        const loadForEdit = (name, data) => {
+          const p = PEPTIDE_DB.find(p=>p.name===name) || {name, desc:""};
+          setPeptide(p);
+          setDoseStr(String(data.dose));
+          setDoseUnit(data.doseUnit||"mg");
+          setVialStr(String(data.vialMg));
+          setWaterMl(data.waterMl||2);
+          setEditingName(name);
+          setStep(1);
+        };
+        return (
         <div>
           <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>RECONSTITUTION CALCULATOR</div>
           <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"16px",marginBottom:12}}>
@@ -1680,7 +1919,7 @@
                   onFocus={()=>setShowSearch(true)}
                   onChange={e=>{setSearch(e.target.value);setShowSearch(true);}}
                   placeholder="Search peptides…"
-                  style={{flex:1,background:"transparent",border:"none",outline:"none",fontSize:15,color:peptide&&!showSearch?"#F59E0B":"#fff",fontWeight:peptide&&!showSearch?600:400}}
+                  style={{flex:1,background:"transparent",border:"none",outline:"none",fontSize:16,color:peptide&&!showSearch?"#F59E0B":"#fff",fontWeight:peptide&&!showSearch?600:400}}
                 />
                 {peptide && !showSearch
                   ? <span style={{fontSize:12,color:"#34D399",fontWeight:700}}>✓</span>
@@ -1689,13 +1928,12 @@
                     : <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>›</span>
                 }
               </div>
-              {/* Dropdown list */}
               {showSearch&&(
                 <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#1E3558",borderRadius:"0 0 12px 12px",border:"1px solid rgba(99,102,241,0.4)",borderTop:"none",zIndex:100,maxHeight:220,overflowY:"auto"}}>
                   {filteredPeptides.length === 0
                     ? <div style={{padding:"14px 16px",fontSize:13,color:"rgba(255,255,255,0.4)"}}>No matches</div>
                     : filteredPeptides.map(p=>(
-                        <div key={p.name} onClick={()=>{setPeptide(p);setShowSearch(false);setSearch("");if(p.recDose){setDoseStr(p.recDose);setDoseUnit(p.recUnit==="mg"?"mg":"mcg");}}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",WebkitTapHighlightColor:"transparent",background:peptide?.name===p.name?"rgba(99,102,241,0.15)":"transparent"}}>
+                        <div key={p.name} onClick={()=>{setPeptide(p);setShowSearch(false);setSearch("");setEditingName(null);if(p.recDose){setDoseStr(p.recDose);setDoseUnit(p.recUnit==="mg"?"mg":"mcg");}}} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",WebkitTapHighlightColor:"transparent",background:peptide?.name===p.name?"rgba(99,102,241,0.15)":"transparent"}}>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
                               <span style={{fontSize:14,fontWeight:500,color:"#fff"}}>{p.name}</span>
@@ -1710,12 +1948,38 @@
                 </div>
               )}
             </div>
-            {/* Tap outside to close */}
             {showSearch&&<div style={{position:"fixed",inset:0,zIndex:99}} onClick={()=>{setShowSearch(false);setSearch("");}}/>}
           </div>
           {ctaBtn("Select Peptide →", ()=>setStep(1), !!peptide)}
+
+          {/* Saved doses */}
+          {savedEntries.length > 0 && (
+            <div style={{marginTop:20}}>
+              <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10}}>SAVED DOSES</div>
+              <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,overflow:"hidden"}}>
+                {savedEntries.map(([name, data], i)=>(
+                  <div key={name} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:i<savedEntries.length-1?"1px solid rgba(255,255,255,0.07)":"none"}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#fff",marginBottom:3}}>{name}</div>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        <span style={{fontSize:12,color:"#A78BFA",background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.25)",padding:"2px 8px",borderRadius:6,fontWeight:700}}>{data.units}u</span>
+                        <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.06)",padding:"2px 8px",borderRadius:6}}>{data.dose}{data.doseUnit}</span>
+                        <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.06)",padding:"2px 8px",borderRadius:6}}>{data.vialMg}mg vial</span>
+                        <span style={{fontSize:12,color:"rgba(255,255,255,0.5)",background:"rgba(255,255,255,0.06)",padding:"2px 8px",borderRadius:6}}>{data.waterMl}mL water</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:8,flexShrink:0}}>
+                      <div onClick={()=>loadForEdit(name,data)} style={{padding:"7px 12px",background:"rgba(99,102,241,0.15)",border:"1px solid rgba(99,102,241,0.3)",borderRadius:8,fontSize:12,fontWeight:600,color:"#818CF8",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>Edit</div>
+                      <div onClick={()=>{if(onDelete)onDelete(name);}} style={{padding:"7px 10px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:8,fontSize:12,fontWeight:600,color:"#F87171",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>✕</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      );
+        );
+      }
 
       // ── STEP 1: Dose ────────────────────────────────────────────────────────
       if (step===1) return (
@@ -1875,12 +2139,12 @@
                 cursor: isSame ? "default" : "pointer",
                 WebkitTapHighlightColor:"transparent", marginBottom:8, transition:"all 0.2s",
               }}>
-                {saved ? "✓ Saved to Timeline" : isSame ? "✓ Already Saved" : `Save ${unitsPerDose.toFixed(1)}u to Timeline`}
+                {saved ? "✓ Saved to Timeline" : isSame ? "✓ Already Saved" : editingName ? `Update ${unitsPerDose.toFixed(1)}u` : `Save ${unitsPerDose.toFixed(1)}u to Timeline`}
               </div>
             );
           })()}
 
-          {ctaBtn("New Calculation", ()=>{setPeptide(null);setStep(0);setDoseStr("");setVialStr("");setWaterMl(2);setSaved(false);}, true)}
+          {ctaBtn("New Calculation", ()=>{setPeptide(null);setStep(0);setDoseStr("");setVialStr("");setWaterMl(2);setSaved(false);setEditingName(null);}, true)}
         </div>
       );
     }
@@ -2252,14 +2516,75 @@
         return n;
       };
       // Parse a dose string like "5mg", "300mcg", "100–200mcg", "500mg–1g" → mg (use lower bound)
-      const parseDoseMg = (doseStr) => {
+      // Parse a dose range string, return {low, high, unit, display}
+      const parseDoseRange = (doseStr) => {
         if (!doseStr) return null;
-        const s = doseStr.trim().toLowerCase().split("–")[0].split("-")[0].trim();
-        const n = parseFloat(s);
-        if (isNaN(n)) return null;
-        if (s.includes("mcg")) return n / 1000;
-        if (s.includes("g") && !s.includes("mg")) return n * 1000;
-        return n; // assume mg
+        const raw = doseStr.trim();
+        const unitMatch = raw.match(/(mcg|mg|g|IU)/i);
+        const unit = unitMatch ? unitMatch[1] : 'mg';
+        const toMg = (n) => {
+          const u = unit.toLowerCase();
+          if (u === 'mcg') return n / 1000;
+          if (u === 'g') return n * 1000;
+          return n;
+        };
+        const nums = raw.match(/[\d.]+/g);
+        if (!nums || nums.length === 0) return null;
+        const low = parseFloat(nums[0]);
+        const high = nums.length >= 2 ? parseFloat(nums[1]) : low;
+        const isRange = nums.length >= 2;
+        return { low, high, lowMg: toMg(low), highMg: toMg(high), unit, isRange,
+          displayLow: `${low}${unit}`, displayHigh: `${high}${unit}` };
+      };
+
+      // Week-by-week titration schedules for compounds that don't follow simple low/high
+      const TITRATION_SCHEDULES = {
+        "Retatrutide": [
+          {week:1,  dose:"0.5mg"}, {week:2,  dose:"0.5mg"},
+          {week:3,  dose:"1mg"},   {week:4,  dose:"1mg"},
+          {week:5,  dose:"1.5mg"}, {week:6,  dose:"1.5mg"},
+          {week:7,  dose:"2mg"},   {week:8,  dose:"2mg"},
+          {week:9,  dose:"2mg"},   {week:10, dose:"2mg"},
+          {week:11, dose:"2mg"},   {week:12, dose:"2mg"},
+          {week:13, dose:"2mg"},   {week:14, dose:"3mg"},
+          {week:15, dose:"3mg"},   {week:16, dose:"3mg"},
+          {week:17, dose:"4mg"},   {week:18, dose:"4mg"},
+          {week:19, dose:"4mg"},   {week:20, dose:"4mg"},
+        ],
+      };
+
+      // Compounds that run at HIGH dose from day 1 (GI protection for Reta front-load)
+      const HIGH_FROM_START = new Set(["TUDCA","KPV","Magnesium Citrate","Digestive Enzymes"]);
+
+      // Return the active dose string for current protocol week
+      // Named compounds with TITRATION_SCHEDULES use week-by-week lookup.
+      // HIGH_FROM_START compounds always use high end.
+      // Other range doses: Weeks 1–4 low end, Week 5+ high end.
+      const getActiveDose = (doseStr, itemName) => {
+        if (!doseStr) return doseStr;
+        // Check named titration schedule first
+        if (itemName && TITRATION_SCHEDULES[itemName] && protocolWeek) {
+          const schedule = TITRATION_SCHEDULES[itemName];
+          const entry = schedule.find(s => s.week === protocolWeek)
+            || schedule[schedule.length - 1];
+          return entry.dose;
+        }
+        // Simple range fallback
+        const parsed = parseDoseRange(doseStr);
+        if (!parsed || !parsed.isRange) return doseStr;
+        // GI protection supps always use high end
+        const useHigh = (itemName && HIGH_FROM_START.has(itemName)) || (protocolWeek && protocolWeek >= 5);
+        const val = useHigh ? parsed.high : parsed.low;
+        return `${val}${parsed.unit}`;
+      };
+
+      // Return active dose in mg for inventory deduction
+      const parseDoseMg = (doseStr, itemName) => {
+        if (!doseStr) return null;
+        const activeDose = getActiveDose(doseStr, itemName);
+        const parsed = parseDoseRange(activeDose);
+        if (!parsed) return null;
+        return parsed.lowMg;
       };
 
       // invRemaining: {[orderIndex]: remainingMg} — initialized from ORDERS totalMg
@@ -2274,25 +2599,23 @@
       // Deduct or refund dose from inventory by peptide name
       const adjustInv = (itemName, doseMg, deduct) => {
         if (!doseMg || doseMg <= 0) return;
-        // Find all order indices matching this name, consume from first with stock
         const indices = ORDERS.map((o,i)=>({o,i})).filter(({o})=>o.name.toLowerCase()===itemName.toLowerCase());
         if (!indices.length) return;
+        // Pool total for this peptide across all matching order rows
+        const poolTotal = indices.reduce((sum,{o}) => sum + (parseTotalMg(o.mg) ?? 0), 0);
         setInvRemaining(prev => {
           const next = {...prev};
-          if (deduct) {
-            let remaining = doseMg;
-            for (const {i} of indices) {
-              if (next[i] === undefined) continue;
-              const take = Math.min(next[i], remaining);
-              next[i] = Math.max(0, next[i] - take);
-              remaining -= take;
-              if (remaining <= 0) break;
-            }
-          } else {
-            // Refund: add back to last entry with stock first, or first entry
-            const idx = indices[indices.length-1].i;
-            const total = parseTotalMg(ORDERS[idx].mg) ?? 0;
-            next[idx] = Math.min(total, (next[idx] ?? 0) + doseMg);
+          // Current pooled remaining
+          const curPooled = indices.reduce((sum,{i}) => sum + (next[i] ?? (parseTotalMg(ORDERS[i].mg) ?? 0)), 0);
+          const newPooled = deduct
+            ? Math.max(0, curPooled - doseMg)
+            : Math.min(poolTotal, curPooled + doseMg);
+          // Distribute new pooled value back across rows (fill first row first)
+          let toDistribute = newPooled;
+          for (const {i, o} of indices) {
+            const rowTotal = parseTotalMg(o.mg) ?? 0;
+            next[i] = Math.min(rowTotal, toDistribute);
+            toDistribute = Math.max(0, toDistribute - rowTotal);
           }
           LS.set("invRemaining", next);
           return next;
@@ -2300,6 +2623,58 @@
       };
       const [suppStatuses, setSuppStatuses] = useState(() => LS.get("suppStatuses",LOCAL_SUPPS.reduce((acc,ls,i)=>({...acc,[i]:"needed"}),{})));
       const setSuppStatus = (i,val) => setSuppStatuses(p=>{const next={...p,[i]:val};LS.set("suppStatuses",next);return next;});
+
+      // Parse total count from spec string e.g. "250mg · 60ct" → 60, "1kg" → null
+      const parseSuppCount = (spec) => {
+        if (!spec) return null;
+        const m = spec.match(/(\d+)\s*ct/i);
+        return m ? parseInt(m[1]) : null;
+      };
+
+      // suppInvRemaining: {[suppIndex]: remainingCount}
+      const [suppInvRemaining, setSuppInvRemaining] = useState(() => {
+        const saved = LS.get("suppInvRemaining", null);
+        if (saved) return saved;
+        const init = {};
+        LOCAL_SUPPS.forEach((ls,i) => { const t = parseSuppCount(ls.spec); if (t !== null) init[i] = t; });
+        return init;
+      });
+
+      // Parse per-cap/per-unit strength from spec e.g. "250mg · 60ct" → 250
+      const parseSuppStrengthMg = (spec) => {
+        if (!spec) return null;
+        const m = spec.match(/^([\d,.]+)\s*(mg|g|mcg|iu|IU)/i);
+        if (!m) return null;
+        const val = parseFloat(m[1].replace(',',''));
+        const unit = m[2].toLowerCase();
+        if (unit === 'g') return val * 1000;
+        if (unit === 'mcg') return val / 1000;
+        return val; // mg or IU — treat IU numerically
+      };
+
+      // Calculate how many caps/units needed for a given dose
+      const calcCapsNeeded = (doseStr, spec) => {
+        const activeDose = getActiveDose(doseStr);
+        const parsed = parseDoseRange(activeDose);
+        const strengthMg = parseSuppStrengthMg(spec);
+        if (!parsed || !strengthMg) return 1;
+        return Math.ceil(parsed.lowMg / strengthMg);
+      };
+
+      // Deduct or refund caps from supplement inventory by name and dose string
+      const adjustSuppInv = (suppName, doseStr, deduct) => {
+        const idx = LOCAL_SUPPS.findIndex(ls => ls.name.toLowerCase() === suppName.toLowerCase());
+        if (idx === -1) return;
+        const total = parseSuppCount(LOCAL_SUPPS[idx].spec);
+        if (total === null) return;
+        const caps = calcCapsNeeded(doseStr, LOCAL_SUPPS[idx].spec);
+        setSuppInvRemaining(prev => {
+          const cur = prev[idx] ?? total;
+          const next = {...prev, [idx]: deduct ? Math.max(0, cur - caps) : Math.min(total, cur + caps)};
+          LS.set("suppInvRemaining", next);
+          return next;
+        });
+      };
       const [shopStatuses, setShopStatuses] = useState(() => LS.get("shopStatuses",SHOPPING_LIST.reduce((acc,item,i)=>({...acc,[i]:"needed"}),{})));
       const setShopStatus = (i,val) => setShopStatuses(p=>{const next={...p,[i]:val};LS.set("shopStatuses",next);return next;});
       const [protocolStartDate, setProtocolStartDate] = useState(() => LS.get("protocolStartDate",null));
@@ -2319,7 +2694,7 @@
       };
 
       // Sync body background
-      useEffect(() => { document.body.style.background = "#162844"; }, []);
+      useEffect(() => {}, []);
 
       const check = (k, itemName, doseMg) => setChk(p=>{
         const wasChecked = !!p[k];
@@ -2333,7 +2708,7 @@
       const toggle = i => setOpen(p=>({...p,[i]:!p[i]}));
 
       const s = {
-        app:{fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",background:"#162844",minHeight:"100vh",color:"#fff"},
+        app:{fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",background:"transparent",minHeight:"100vh",color:"#fff"},
         bk:(col)=>({background:"rgba(255,255,255,0.07)",border:`1px solid rgba(255,255,255,0.06)`,borderLeft:`3px solid ${col}`,borderRadius:14,marginBottom:10,overflow:"hidden"}),
         bkH:(col,o)=>({display:"flex",alignItems:"center",gap:10,padding:"14px 16px",cursor:"pointer",background:o?"rgba(255,255,255,0.02)":"transparent",transition:"background 0.15s",WebkitTapHighlightColor:"transparent"}),
         timetag:(col)=>({background:`${col}22`,color:col,border:`1px solid ${col}44`,fontSize:13,fontWeight:700,letterSpacing:"0.06em",padding:"3px 9px",borderRadius:20,whiteSpace:"nowrap"}),
@@ -2348,12 +2723,12 @@
       const renderDaySelector = () => {
         const today = new Date().getDay();
         return (
-          <div style={{marginBottom:20}}>
+          <div style={{marginBottom:14}}>
             {/* Week header */}
-            <div style={{display:"flex",justifyContent:"space-around",marginBottom:8,paddingTop:4}}>
+            <div style={{display:"flex",justifyContent:"space-around",marginBottom:4,paddingTop:2}}>
               {DAY_NAMES.map((name,i)=>(
-                <div key={i} style={{fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",letterSpacing:"0.06em",textAlign:"center",flex:1}}>
-                  {name.slice(0,3).toUpperCase()}
+                <div key={i} style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.5)",letterSpacing:"0.04em",textAlign:"center",flex:1}}>
+                  {name.slice(0,1).toUpperCase()}
                 </div>
               ))}
             </div>
@@ -2364,16 +2739,16 @@
                 const weeklyInjs=WEEKLY_INJECTIONS[i]||[];
                 const date=(()=>{const d=new Date();d.setDate(d.getDate()+(i-today));return d.getDate();})();
                 return (
-                  <div key={i} onClick={()=>setViewDay(i)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",WebkitTapHighlightColor:"transparent",padding:"2px 0"}}>
+                  <div key={i} onClick={()=>setViewDay(i)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",WebkitTapHighlightColor:"transparent",padding:"2px 0"}}>
                     <div style={{
-                      width:38,height:38,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
+                      width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
                       background:isToday&&isSel?"#fff":isSel?"rgba(255,255,255,0.25)":"transparent",
                       transition:"all 0.15s"
                     }}>
-                      <span style={{fontSize:15,fontWeight:isToday?700:500,color:isToday&&isSel?"#162844":isSel?"#fff":isToday?"#fff":"rgba(255,255,255,0.75)"}}>{date}</span>
+                      <span style={{fontSize:13,fontWeight:isToday?700:500,color:isToday&&isSel?"#162844":isSel?"#fff":isToday?"#fff":"rgba(255,255,255,0.75)"}}>{date}</span>
                     </div>
                     {/* Injection dot indicator */}
-                    <div style={{height:3,width:24,borderRadius:2,
+                    <div style={{height:3,width:18,borderRadius:2,
                       background:weeklyInjs.length>0
                         ? (weeklyInjs[0].color || "#F59E0B")
                         : isToday?"rgba(255,255,255,0.6)":"transparent"
@@ -2437,36 +2812,80 @@
         const today=new Date().getDay(); const weeklyInjs=WEEKLY_INJECTIONS[viewDay]||[];
         const dayInfo=DAY_NOTES[viewDay]; const isToday=viewDay===today;
         const isSunday=viewDay===0;
+        const isWeekend = viewDay === 0 || viewDay === 6;
 
         // ── Build unified timeline ──────────────────────────────────────────
         const timeline = [];
 
-        // 1) DAILY protocol blocks — merge weekly injections into Post-Training block (timeHour:8)
-        DAILY.forEach((blk, bi) => {
-          if (blk.icon === "meal") return;
-          const extraItems = blk.timeHour === 8
-            ? weeklyInjs.map((w, wi) => ({
-                name: w.name, dose: w.dose, method: w.method, purpose: w.purpose,
-                note: w.note, color: w.color, t: false, cycle: {type:"daily"},
-                weekly: true, weeklyIdx: wi,
-              }))
-            : [];
+        const sched = isWeekend ? userSchedule.weekend : userSchedule.weekday;
+
+        if (isWeekend) {
+          const preTrain = DAILY[0];
+          const postTrain = DAILY[2];
+          const electrolytes = DAILY[1];
+          const mergedItems = [...preTrain.items, ...electrolytes.items, ...postTrain.items];
+          const extraItems = weeklyInjs.map((w, wi) => ({
+            name: w.name, dose: w.dose, method: w.method, purpose: w.purpose,
+            note: w.note, color: w.color, t: false, cycle: {type:"daily"},
+            weekly: true, weeklyIdx: wi,
+          }));
           timeline.push({
-            sortHour: blk.timeHour, type: "inject", key: `daily-${bi}`,
-            label: blk.label, time: blk.time, color: blk.color, icon: blk.icon,
-            blend: blk.blend || null, items: [...blk.items, ...extraItems], bi,
+              sortHour: sched.morning, type: "inject", key: "daily-merged",
+              label: "Morning Blend — Fasted", time: fmtHour(sched.morning),
+              color: C.green, icon: "inject",
+              blend: `${blendNote("pre-train")} ${blendNote("post-train-a")} ${blendNote("aod")}`,
+              items: [...mergedItems, ...extraItems], bi: 0,
+            });
+          [6, 7].forEach(bi => {
+            const blk = DAILY[bi];
+            if (!blk) return;
+            const slotKey = bi === 6 ? "evening" : "sleep";
+            const sh = sched[slotKey] ?? blk.timeHour;
+            timeline.push({
+              sortHour: sh, type: "inject", key: `daily-${bi}`,
+              label: blk.label, time: fmtHour(sh), color: blk.color, icon: blk.icon,
+              blend: blk.blend || null, items: blk.items, bi,
+            });
           });
-        });
+        } else {
+          DAILY.forEach((blk, bi) => {
+            if (blk.icon === "meal") return;
+            const slotMap = {0:"preTrain", 1:"training", 2:"postTrain", 3:"coffee", 6:"evening", 7:"sleep"};
+            const slotKey = slotMap[bi];
+            const sh = slotKey ? (sched[slotKey] ?? blk.timeHour) : blk.timeHour;
+            const extraItems = bi === 2
+              ? weeklyInjs.map((w, wi) => ({
+                  name: w.name, dose: w.dose, method: w.method, purpose: w.purpose,
+                  note: w.note, color: w.color, t: false, cycle: {type:"daily"},
+                  weekly: true, weeklyIdx: wi,
+                }))
+              : [];
+            timeline.push({
+              sortHour: sh, type: "inject", key: `daily-${bi}`,
+              label: blk.label, time: slotKey ? fmtHour(sh) : blk.time,
+              color: blk.color, icon: blk.icon,
+              blend: blk.blend || null, items: [...blk.items, ...extraItems], bi,
+            });
+          });
+        }
 
         // 2) Diet meals (from DIET_MEALS) — insert in time order
-        const mealHours = { m1:9.5, m2:12, m3:17, m4:20.25 };
+        const mealHours = {
+          m1: sched.meal1,
+          m2: sched.meal2,
+          m3: sched.meal3,
+          m4: 20.25,
+        };
         const activeMeals = isSunday
           ? DIET_MEALS.filter(m=>m.id!=="m3").map(m=>m.id==="m2"?{...m,macros:{...m.macros,c:m.macros.c*2,cal:m.macros.cal+(m.macros.c*4)}}:m)
           : DIET_MEALS;
+        // Filter out disabled meals
+
         activeMeals.forEach(meal => {
           timeline.push({
             sortHour: mealHours[meal.id] || 12, type: "meal", key: `meal-${meal.id}`,
-            label: meal.label, time: meal.time, color: meal.color, icon: meal.icon,
+            label: meal.label, time: fmtHour(mealHours[meal.id] || 12),
+            color: meal.color, icon: meal.icon,
             mealId: meal.id, mealNote: meal.note, mealOptions: meal.options,
             mealSupps: meal.supps, macros: meal.macros, optional: meal.id === "m4",
           });
@@ -2507,7 +2926,7 @@
         );
 
         const CheckBox = ({done, color}) => (
-          <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
+          <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,
             border:`2px solid ${done ? color : "rgba(255,255,255,0.35)"}`,
             background: done ? color : "transparent",
             display:"flex",alignItems:"center",justifyContent:"center",
@@ -2517,43 +2936,54 @@
         );
 
         // Render a single timeline entry card
+        const scrollToCard = (id) => setTimeout(() => document.getElementById(id)?.scrollIntoView({behavior:"smooth", block:"start"}), 50);
+
         const TimelineCard = ({entry}) => {
           const cardKey = entry.key;
-          const isExpanded = !!open[cardKey];
-          const toggleCard = () => setOpen(p=>({...p,[cardKey]:!p[cardKey]}));
+          const isExpanded = expandedCard === `today-${cardKey}`;
+          const toggleCard = () => toggleExpandedCard(`today-${cardKey}`, `card-${cardKey}`);
 
           // ── MEAL card ────────────────────────────────────────────────────
           if (entry.type === "meal") {
             const mealDone = !!chk[`${viewDay}-meal-${entry.mealId}`];
             const checkMeal = () => check(`${viewDay}-meal-${entry.mealId}`);
             const optKey = `${viewDay}-mealopt-${entry.mealId}`;
+            const suppTotal = entry.mealSupps.length;
+            const suppDone = entry.mealSupps.filter((_,i)=>!!chk[`${viewDay}-mealsupp-${entry.mealId}-${i}`]).length;
+            const allDone = mealDone && (suppTotal === 0 || suppDone === suppTotal);
             return (
-              <div style={{marginBottom:8}}>
+              <div id={`card-${cardKey}`} style={{marginBottom:8}}>
                 {entry.optional && (
                   <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",marginBottom:4,paddingLeft:2}}>OPTIONAL — ONLY IF SHORT ON PROTEIN</div>
                 )}
-                <div style={{background:"rgba(255,255,255,0.07)",border:`1px solid ${mealDone?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${entry.color}`,borderRadius:14,overflow:"hidden",transition:"border-color 0.2s"}}>
+                <div style={{background:allDone?"rgba(52,211,153,0.06)":"rgba(255,255,255,0.07)",border:`1px solid ${allDone?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${allDone?"#34D399":entry.color}`,borderRadius:14,overflow:"hidden",transition:"all 0.2s"}}>
                   <div onClick={toggleCard} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                    <div style={{width:36,height:36,borderRadius:9,background:`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <Icon name={entry.icon} size={17} color={entry.color}/>
+                    <div style={{width:30,height:30,borderRadius:8,background:allDone?"rgba(52,211,153,0.2)":`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      {allDone
+                        ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        : <Icon name={entry.icon} size={17} color={entry.color}/>
+                      }
                     </div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3,flexWrap:"wrap"}}>
-                        <span style={{fontSize:15,fontWeight:600,color:mealDone?"rgba(255,255,255,0.5)":"#fff"}}>{entry.label}</span>
+                        <span style={{fontSize:15,fontWeight:600,color:allDone?"#34D399":"#fff"}}>{entry.label}</span>
                         {entry.optional&&<div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.07)",padding:"2px 6px",borderRadius:4,letterSpacing:"0.05em"}}>OPT</div>}
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:13,color:entry.color,fontWeight:600,background:`${entry.color}18`,padding:"2px 8px",borderRadius:6}}>{entry.time}</span>
+                        <span style={{fontSize:13,color:allDone?"#34D399":entry.color,fontWeight:600,background:allDone?"rgba(52,211,153,0.12)":`${entry.color}18`,padding:"2px 8px",borderRadius:6}}>{allDone?"✓ Complete":entry.time}</span>
                       </div>
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                      {suppTotal > 0 && (
+                        <span style={{fontSize:13,color:suppDone===suppTotal&&mealDone?"#34D399":"rgba(255,255,255,0.45)",fontWeight:suppDone===suppTotal&&mealDone?600:400}}>{mealDone?suppDone:0}/{suppTotal}</span>
+                      )}
                       <Chevron open={isExpanded}/>
                     </div>
                   </div>
                   {isExpanded && (
                     <div style={{borderTop:"1px solid rgba(255,255,255,0.08)"}}>
                       {/* Mark eaten row */}
-                      <div onClick={checkMeal} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",background:mealDone?"rgba(52,211,153,0.06)":"transparent",WebkitTapHighlightColor:"transparent"}}>
+                      <div onClick={checkMeal} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 12px",borderBottom:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",background:mealDone?"rgba(52,211,153,0.06)":"transparent",WebkitTapHighlightColor:"transparent"}}>
                         <CheckBox done={mealDone} color={entry.color}/>
                         <span style={{fontSize:14,fontWeight:600,color:mealDone?"#34D399":"rgba(255,255,255,0.65)"}}>{mealDone?"Meal logged ✓":"Mark meal as eaten"}</span>
                         <span style={{fontSize:12,color:"#38BDF8",background:"rgba(56,189,248,0.15)",padding:"2px 8px",borderRadius:5,fontWeight:700}}>{entry.macros.p}g P</span>
@@ -2570,10 +3000,10 @@
                             const sk=`${viewDay}-mealsupp-${entry.mealId}-${i}`;
                             const sdone=!!chk[sk];
                             return(
-                              <div key={i} onClick={()=>check(sk)} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",background:sdone?"rgba(52,211,153,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
+                              <div key={i} onClick={()=>{const wasChecked=!!chk[sk];check(sk);adjustSuppInv(s.name,getActiveDose(s.dose,s.name),!wasChecked);}} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",cursor:"pointer",background:sdone?"rgba(52,211,153,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
                                 <CheckBox done={sdone} color={entry.color}/>
                                 <span style={{fontSize:14,fontWeight:500,color:sdone?"rgba(255,255,255,0.4)":"#fff",textDecoration:sdone?"line-through":"none"}}>{s.name}</span>
-                                {s.dose&&<span style={{fontSize:12,color:entry.color,background:`${entry.color}18`,padding:"2px 8px",borderRadius:5,fontWeight:600}}>{s.dose}</span>}
+                                {s.dose&&<span style={{fontSize:12,color:entry.color,background:`${entry.color}18`,padding:"2px 8px",borderRadius:5,fontWeight:600}}>{getActiveDose(s.dose,s.name)}</span>}
                               </div>
                             );
                           })}
@@ -2596,14 +3026,17 @@
           const activeCount = entry.items.filter(it=>it.weekly || getCycleStatus(it,protocolDay,viewDay).active).length;
           const allDone = activeCount > 0 && doneCount === activeCount;
           return (
-            <div style={{background:"rgba(255,255,255,0.07)",border:`1px solid ${allDone?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${entry.color}`,borderRadius:14,marginBottom:8,overflow:"hidden",transition:"border-color 0.2s"}}>
+            <div id={`card-${cardKey}`} style={{background:allDone?"rgba(52,211,153,0.06)":"rgba(255,255,255,0.07)",border:`1px solid ${allDone?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.08)"}`,borderLeft:`3px solid ${allDone?"#34D399":entry.color}`,borderRadius:14,marginBottom:6,overflow:"hidden",transition:"all 0.2s"}}>
               <div onClick={toggleCard} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                <div style={{width:36,height:36,borderRadius:9,background:`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <Icon name={entry.icon} size={17} color={entry.color}/>
+                <div style={{width:30,height:30,borderRadius:8,background:allDone?"rgba(52,211,153,0.2)":`${entry.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  {allDone
+                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <Icon name={entry.icon} size={17} color={entry.color}/>
+                  }
                 </div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:15,fontWeight:600,color:allDone?"rgba(255,255,255,0.5)":"#fff",marginBottom:3}}>{entry.label}</div>
-                  <span style={{fontSize:13,color:entry.color,background:`${entry.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:600}}>{entry.time}</span>
+                  <div style={{fontSize:15,fontWeight:600,color:allDone?"#34D399":"#fff",marginBottom:3}}>{entry.label}</div>
+                  <span style={{fontSize:13,color:allDone?"#34D399":entry.color,background:allDone?"rgba(52,211,153,0.12)":`${entry.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:600}}>{allDone?"✓ Complete":entry.time}</span>
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                   <span style={{fontSize:13,color:allDone?"#34D399":"rgba(255,255,255,0.5)",fontWeight:allDone?600:400}}>{doneCount}/{activeCount}</span>
@@ -2620,9 +3053,10 @@
                     const done=chk[k];
                     const cs = isWeekly ? {active:true,tag:null} : getCycleStatus(item, protocolDay, viewDay);
                     const itemColor = item.color || entry.color;
-                    const itemDoseMg = parseDoseMg(item.dose);
+                    const activeDose = getActiveDose(item.dose, item.name);
+                    const itemDoseMg = parseDoseMg(item.dose, item.name);
                     return (
-                      <div key={ii} onClick={cs.active?()=>check(k, item.name, itemDoseMg):undefined} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:ii<entry.items.length-1?"1px solid rgba(255,255,255,0.07)":"none",cursor:cs.active?"pointer":"default",background:done?"rgba(52,211,153,0.04)":!cs.active?"rgba(0,0,0,0.15)":"transparent",WebkitTapHighlightColor:"transparent",opacity:cs.active?1:0.45}}>
+                      <div key={ii} onClick={cs.active?()=>{check(k, item.name, itemDoseMg); if(!item.weekly && !PEPTIDE_LIST.includes(item.name)) adjustSuppInv(item.name, activeDose, !chk[k]);} :undefined} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 12px",borderBottom:ii<entry.items.length-1?"1px solid rgba(255,255,255,0.07)":"none",cursor:cs.active?"pointer":"default",background:done?"rgba(52,211,153,0.04)":!cs.active?"rgba(0,0,0,0.15)":"transparent",WebkitTapHighlightColor:"transparent",opacity:cs.active?1:0.45}}>
                         <CheckBox done={done} color={cs.active?itemColor:"rgba(255,255,255,0.2)"}/>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3,flexWrap:"wrap"}}>
@@ -2630,7 +3064,7 @@
                             {isWeekly && <span style={{fontSize:11,fontWeight:700,color:itemColor,background:`${itemColor}18`,padding:"2px 6px",borderRadius:10,letterSpacing:"0.04em"}}>WEEKLY</span>}
                             <UnitTag name={item.name}/>
                             {cs.active
-                              ? <span style={{fontSize:12,color:itemColor,background:`${itemColor}18`,padding:"2px 7px",borderRadius:5}}>{item.dose}</span>
+                              ? <span style={{fontSize:12,color:itemColor,background:`${itemColor}18`,padding:"2px 7px",borderRadius:5}}>{activeDose}</span>
                               : <span style={{fontSize:11,fontWeight:700,color:"#F87171",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",padding:"2px 8px",borderRadius:5,letterSpacing:"0.04em"}}>{cs.tag}</span>
                             }
                             {cs.active && <span style={{fontSize:12,color:"rgba(255,255,255,0.55)",background:"rgba(255,255,255,0.06)",padding:"2px 7px",borderRadius:5}}>{item.method}</span>}
@@ -2645,8 +3079,10 @@
                     );
                   })}
                   {entry.blend && (
-                    <div style={{margin:"0 14px 12px",padding:"9px 12px",background:`${entry.color}10`,border:`1px solid ${entry.color}22`,borderRadius:8,fontSize:13,color:entry.color,fontWeight:500,lineHeight:1.5}}>
-                      <span style={{fontWeight:700}}>Blend: </span>{entry.blend}
+                    <div style={{margin:"0 14px 12px",padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:400,lineHeight:1.6}}>
+                      {entry.blend.split(". ").filter(Boolean).map((s,i,arr)=>(
+                        <div key={i} style={{marginBottom:i<arr.length-1?6:0}}>{s}</div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -2661,6 +3097,7 @@
               height:"calc(100vh - 80px)",
               maxHeight:"calc(100vh - 80px)",
               overflow:"hidden",
+              overscrollBehavior:"contain",
               display:"flex", flexDirection:"column",
               justifyContent:"center",
               padding:`calc(env(safe-area-inset-top) + 40px) 24px calc(env(safe-area-inset-bottom) + 24px)`,
@@ -2695,25 +3132,7 @@
           <div style={{padding:"0 16px"}}>
             {renderDaySelector()}
 
-            {/* Day summary card */}
-            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"14px 16px",marginBottom:12}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                <div>
-                  <div style={{fontSize:15,fontWeight:700,color:"#fff"}}>{DAY_NAMES[viewDay]}</div>
-                  <div style={{fontSize:13,color:dayInfo.color,marginTop:2,fontWeight:600}}>{dayInfo.note}</div>
-                </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:22,fontWeight:700,color:pct===100?"#34D399":"#fff"}}>{pct}%</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>{totalDone}/{totalItems} done</div>
-                </div>
-              </div>
-              <div style={{height:5,background:"rgba(255,255,255,0.1)",borderRadius:3,overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:2,width:`${pct}%`,transition:"width 0.4s",
-                  background:pct===100?"#34D399":"linear-gradient(90deg,#6366F1,#818CF8)"}}/>
-              </div>
-            </div>
-
-            {isToday&&<><ReadinessScore chk={chk} viewDay={viewDay} theme={T}/><InjectionTimer theme={T}/><StreakTracker protocolStartDate={protocolStartDate} theme={T}/></>}
+            {isToday&&<><ReadinessScore chk={chk} viewDay={viewDay} theme={T}/><InjectionTimer chk={chk} viewDay={viewDay} theme={T}/></>}
 
             {isSunday && (
               <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.28)",borderRadius:12,padding:"11px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
@@ -2735,7 +3154,7 @@
         );
       };
 
-      const renderTools = () => <ReconCalcWizard onSave={saveDose} savedDoses={savedDoses}/>;
+      const renderTools = () => <ReconCalcWizard onSave={saveDose} onDelete={deleteDose} savedDoses={savedDoses}/>;
 
       // ─── Card primitives ──────────────────────────────────────────────────────
       const Card = ({children, style={}}) => (
@@ -2760,7 +3179,7 @@
         <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.65)",letterSpacing:"0.08em",marginBottom:10,...style}}>{children}</div>
       );
       const Tag = ({children,color}) => (
-        <span style={{fontSize:13,color:color||"rgba(255,255,255,0.75)",background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.1)",padding:"3px 9px",borderRadius:20,display:"inline-block"}}>{children}</span>
+        <span style={{fontSize:11,color:color||"rgba(255,255,255,0.65)",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.08)",padding:"2px 7px",borderRadius:20,display:"inline-block",whiteSpace:"nowrap"}}>{children}</span>
       );
       const Row = ({left,right,sub,dot,last=false}) => (
         <div style={{padding:"13px 16px",borderBottom:last?"none":"1px solid rgba(255,255,255,0.08)"}}>
@@ -2829,36 +3248,62 @@
       const renderBlending = () => (
         <div>
           <SectionLabel>INJECTION BLENDS</SectionLabel>
-          {BLENDS.map((bl,i)=>(
-            <Card key={i} style={{marginBottom:10}}>
-              <CardHeader icon={bl.icon} iconColor={bl.color} title={bl.label} subtitle={bl.time}/>
-              <Divider/>
-              <div style={{padding:"12px 16px 4px"}}>
-                <SectionLabel style={{marginBottom:10}}>{bl.items.length} COMPOUNDS</SectionLabel>
-                {bl.items.map((item,j)=>{
-                  const text = typeof item === "string" ? item : item.text;
-                  const days = typeof item === "object" ? item.days : null;
-                  const itemNote = typeof item === "object" ? item.note : null;
-                  const blendName = text.split(" — ")[0].trim();
-                  return (
-                    <div key={j} style={{paddingBottom:10,borderBottom:j<bl.items.length-1?"1px solid rgba(255,255,255,0.08)":"none",marginBottom:j<bl.items.length-1?10:4}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:6,height:6,borderRadius:"50%",background:bl.color,flexShrink:0}}/>
-                        <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",flex:1}}>{text}</span>
-                        {days&&days.map(d=>(
-                          <span key={d} style={{fontSize:11,fontWeight:700,color:bl.color,background:`${bl.color}18`,border:`1px solid ${bl.color}33`,padding:"2px 6px",borderRadius:8,letterSpacing:"0.04em",flexShrink:0}}>{d}</span>
-                        ))}
-                        <UnitTag name={blendName}/>
-                      </div>
-                      {itemNote&&<div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:4,paddingLeft:16}}>{itemNote}</div>}
+          {BLENDS.map((bl,i)=>{
+            const cardId = `blend-${bl.id}`;
+            const isOpen = expandedCard === cardId;
+            const toggle = () => toggleExpandedCard(cardId, `blend-card-${bl.id}`);
+            return (
+              <Card key={i} id={`blend-card-${bl.id}`} style={{marginBottom:10}}>
+                <div onClick={toggle} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                  <div style={{width:34,height:34,borderRadius:9,background:`${bl.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Icon name={bl.icon} size={17} color={bl.color}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:15,fontWeight:600,color:"#fff",marginBottom:2}}>{bl.label}</div>
+                    <span style={{fontSize:12,color:bl.color,background:`${bl.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:600}}>{bl.time}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                    <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>{bl.items.length}</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:isOpen?"rotate(180deg)":"none",transition:"0.2s"}}>
+                      <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                {isOpen && (
+                  <>
+                    <Divider/>
+                    <div style={{padding:"12px 16px 4px"}}>
+                      <SectionLabel style={{marginBottom:10}}>{bl.items.length} COMPOUNDS</SectionLabel>
+                      {bl.items.map((item,j)=>{
+                        const text = typeof item === "string" ? item : item.text;
+                        const days = typeof item === "object" ? item.days : null;
+                        const itemNote = typeof item === "object" ? item.note : null;
+                        const blendName = text.split(" — ")[0].trim();
+                        return (
+                          <div key={j} style={{paddingBottom:10,borderBottom:j<bl.items.length-1?"1px solid rgba(255,255,255,0.08)":"none",marginBottom:j<bl.items.length-1?10:4}}>
+                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                              <div style={{width:6,height:6,borderRadius:"50%",background:bl.color,flexShrink:0}}/>
+                              <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",flex:1}}>{text}</span>
+                              {days&&days.map(d=>(
+                                <span key={d} style={{fontSize:11,fontWeight:700,color:bl.color,background:`${bl.color}18`,border:`1px solid ${bl.color}33`,padding:"2px 6px",borderRadius:8,letterSpacing:"0.04em",flexShrink:0}}>{d}</span>
+                              ))}
+                              <UnitTag name={blendName}/>
+                            </div>
+                            {itemNote&&<div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:4,paddingLeft:16}}>{itemNote}</div>}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-              <div style={{margin:"0 16px 14px",padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.55}}>{bl.note}</div>
-            </Card>
-          ))}
-
+                    <div style={{margin:"0 16px 14px",padding:"10px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.6}}>
+                      {bl.note.split(". ").filter(Boolean).map((s,i,arr)=>(
+                        <div key={i} style={{marginBottom:i<arr.length-1?6:0}}>{s}</div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </Card>
+            );
+          })}
         </div>
       );
 
@@ -2908,7 +3353,7 @@
         const LAYER_COLORS = {"Hormonal Foundation":T.cyan,"GH Axis":T.violet,"Fat Loss":T.amber,"Recovery":T.teal,"Sleep & CNS":"#8B5CF6","Organ Protection":T.rose,"Supplement Synergy":T.rose};
         const peptideLayers=[...new Set(SYNERGY.filter(s=>!s.supp).map(s=>s.layer))];
         const suppItems=SYNERGY.filter(s=>s.supp);
-        const toggleLayer = (layer) => setExpandedLayers(p=>({...p,[layer]:!p[layer]}));
+        const toggleLayer = (layer) => toggleExpandedCard(`stack-${layer}`, `stack-layer-${layer.replace(/\s+/g,'-')}`);
         const Chevron = ({open}) => (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:open?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
             <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2920,9 +3365,9 @@
             {peptideLayers.map(layer=>{
               const items=SYNERGY.filter(s=>s.layer===layer&&!s.supp);
               const lc=LAYER_COLORS[layer]; const li=LAYER_ICONS[layer];
-              const isOpen=!!expandedLayers[layer];
+              const isOpen = expandedCard === `stack-${layer}`;
               return (
-                <Card key={layer} style={{marginBottom:10}}>
+                <Card key={layer} id={`stack-layer-${layer.replace(/\s+/g,'-')}`} style={{marginBottom:10}}>
                   <div onClick={()=>toggleLayer(layer)} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                     <div style={{width:32,height:32,borderRadius:9,background:`${lc}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                       <Icon name={li} size={16} color={lc}/>
@@ -2949,15 +3394,15 @@
             })}
 
             <SectionLabel style={{marginTop:20}}>SUPPLEMENT SYNERGIES</SectionLabel>
-            <Card style={{marginBottom:20}}>
-              <div onClick={()=>setSuppOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+            <Card id="stack-supps" style={{marginBottom:20}}>
+              <div onClick={()=>toggleExpandedCard('stack-supps','stack-supps')} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                 <span style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.75)"}}>How orals amplify the peptide stack</span>
                 <div style={{display:"flex",alignItems:"center",gap:6}}>
                   <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>{suppItems.length}</span>
-                  <Chevron open={suppOpen}/>
+                  <Chevron open={expandedCard==='stack-supps'}/>
                 </div>
               </div>
-              {suppOpen&&(
+              {expandedCard==='stack-supps'&&(
                 <div style={{borderTop:"1px solid rgba(255,255,255,0.07)"}}>
                   {suppItems.map((syn,i)=>(
                     <div key={i} style={{padding:"13px 16px",borderBottom:i<suppItems.length-1?"1px solid rgba(255,255,255,0.07)":"none"}}>
@@ -2973,15 +3418,15 @@
             </Card>
 
             <SectionLabel>DAILY SUPPLEMENTS</SectionLabel>
-            <Card>
-              <div onClick={()=>setDailySuppOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+            <Card id="stack-daily-supps">
+              <div onClick={()=>toggleExpandedCard('stack-daily-supps','stack-daily-supps')} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                 <span style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.75)"}}>Oral compounds & timing</span>
                 <div style={{display:"flex",alignItems:"center",gap:6}}>
                   <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>{SUPPS.length}</span>
-                  <Chevron open={dailySuppOpen}/>
+                  <Chevron open={expandedCard==='stack-daily-supps'}/>
                 </div>
               </div>
-              {dailySuppOpen&&(
+              {expandedCard==='stack-daily-supps'&&(
                 <div style={{borderTop:"1px solid rgba(255,255,255,0.07)"}}>
                   {SUPPS.map((sup,i)=>(
                     <div key={i} style={{padding:"13px 16px",borderBottom:i<SUPPS.length-1?"1px solid rgba(255,255,255,0.07)":"none"}}>
@@ -3052,18 +3497,18 @@
         const SC={covered:T.green,topup:T.amber,backup:"rgba(255,255,255,0.65)",ordered:T.cyan,needed:T.rose};
         const SRC={"HE Peptides":T.cyan,"zztai Peptide":T.violet,"Hebei Feisite":T.teal};
         const sel=(col)=>({background:"rgba(255,255,255,0.07)",border:"none",color:col,borderRadius:8,
-          padding:"5px 26px 5px 10px",fontSize:13,fontWeight:600,outline:"none",cursor:"pointer",
+          padding:"2px 20px 2px 7px",fontSize:11,fontWeight:600,outline:"none",cursor:"pointer",
           appearance:"none",WebkitAppearance:"none",
           backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E")`,
           backgroundRepeat:"no-repeat",backgroundPosition:"right 8px center"});
         return (
           <div>
             {/* Cost summary */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>
               {[{label:"Total",value:`$${total.toLocaleString()}`,color:T.cyan},{label:"Per Week",value:"~$73",color:T.green},{label:"Per Day",value:"~$10",color:T.amber}].map((s,i)=>(
-                <div key={i} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
-                  <div style={{fontSize:17,fontWeight:700,color:s.color,marginBottom:3}}>{s.value}</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{s.label}</div>
+                <div key={i} style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}>
+                  <div style={{fontSize:14,fontWeight:700,color:s.color,marginBottom:2}}>{s.value}</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.5)"}}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -3088,6 +3533,11 @@
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         {pct !== null && remMg !== totalMg && <span style={{fontSize:13,fontWeight:700,color:remColor}}>{fmtMg(remMg)} left</span>}
+                        {pct !== null && remMg !== totalMg && (
+                          <span onClick={()=>{
+                            setInvRemaining(prev=>{const next={...prev,[i]:totalMg};LS.set("invRemaining",next);return next;});
+                          }} style={{fontSize:11,color:"rgba(255,255,255,0.3)",cursor:"pointer",WebkitTapHighlightColor:"transparent",padding:"2px 6px",background:"rgba(255,255,255,0.06)",borderRadius:5}}>reset</span>
+                        )}
                         <span style={{fontSize:13,fontWeight:600,color:T.green}}>{o.cost}</span>
                       </div>
                     </div>
@@ -3102,12 +3552,10 @@
                         </div>
                       </div>
                     )}
-                    <div style={{display:"flex",gap:6,marginBottom:9,paddingLeft:16,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",gap:5,marginBottom:9,paddingLeft:16,flexWrap:"nowrap",alignItems:"center"}}>
                       {[o.spec,`Qty ${o.qty}`].map((t,j)=><Tag key={j}>{t}</Tag>)}
-                    </div>
-                    <div style={{display:"flex",gap:8,paddingLeft:16,flexWrap:"wrap"}}>
-                      <select value={cSrc} onChange={e=>setOrderSource(i,e.target.value)} style={sel(SRC[cSrc]||T.muted)}>{SOURCES.map(s=><option key={s}>{s}</option>)}</select>
-                      <select value={cs} onChange={e=>setOrderStatus(i,e.target.value)} style={sel(sc)}>
+                      <select value={cSrc} onChange={e=>{const s=window.scrollY;setOrderSource(i,e.target.value);requestAnimationFrame(()=>window.scrollTo(0,s));}} style={sel(SRC[cSrc]||T.muted)}>{SOURCES.map(s=><option key={s}>{s}</option>)}</select>
+                      <select value={cs} onChange={e=>{const s=window.scrollY;setOrderStatus(i,e.target.value);requestAnimationFrame(()=>window.scrollTo(0,s));}} style={sel(sc)}>
                         <option value="covered">Covered</option><option value="topup">Top-up</option>
                         <option value="backup">Backup</option><option value="ordered">Ordered</option>
                         <option value="needed">Needed</option>
@@ -3123,27 +3571,49 @@
             <Card style={{marginBottom:20}}>
               {LOCAL_SUPPS.map((ls,i)=>{
                 const cs=suppStatuses[i]||"needed"; const sc=SC[cs]||"rgba(255,255,255,0.65)";
-                return (
+                return (() => {
+                  const totalCt = parseSuppCount(ls.spec);
+                  const remCt = suppInvRemaining[i] ?? totalCt;
+                  const pct = totalCt ? Math.round((remCt / totalCt) * 100) : null;
+                  const remColor = pct === null ? T.muted : pct > 50 ? T.green : pct > 20 ? T.amber : T.rose;
+                  return (
                   <div key={i} style={{padding:"14px 16px",borderBottom:i<LOCAL_SUPPS.length-1?"1px solid rgba(255,255,255,0.08)":"none"}}>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                       <div style={{display:"flex",alignItems:"center",gap:9}}>
                         <div style={{width:7,height:7,borderRadius:"50%",background:sc,flexShrink:0}}/>
                         <span style={{fontSize:13,fontWeight:500,color:"#fff"}}>{ls.name}</span>
                       </div>
-                      <span style={{fontSize:13,fontWeight:600,color:T.green}}>{ls.cost}</span>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        {pct !== null && remCt !== totalCt && <span style={{fontSize:13,fontWeight:700,color:remColor}}>{remCt} left</span>}
+                        {pct !== null && remCt !== totalCt && (
+                          <span onClick={()=>{setSuppInvRemaining(prev=>{const next={...prev,[i]:totalCt};LS.set("suppInvRemaining",next);return next;});}} style={{fontSize:11,color:"rgba(255,255,255,0.3)",cursor:"pointer",WebkitTapHighlightColor:"transparent",padding:"2px 6px",background:"rgba(255,255,255,0.06)",borderRadius:5}}>reset</span>
+                        )}
+                        <span style={{fontSize:13,fontWeight:600,color:T.green}}>{ls.cost}</span>
+                      </div>
                     </div>
-                    <div style={{display:"flex",gap:6,marginBottom:9,paddingLeft:16}}>
-                      <Tag>{ls.dose}</Tag><Tag>{ls.freq}</Tag>
-                    </div>
-                    <div style={{paddingLeft:16}}>
-                      <select value={cs} onChange={e=>setSuppStatus(i,e.target.value)} style={sel(sc)}>
+                    {pct !== null && remCt !== totalCt && (
+                      <div style={{marginBottom:8,paddingLeft:16}}>
+                        <div style={{height:4,background:"rgba(255,255,255,0.08)",borderRadius:2,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:2,width:`${pct}%`,background:remColor,transition:"width 0.4s"}}/>
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",marginTop:3}}>
+                          <span style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>0</span>
+                          <span style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>{totalCt} total</span>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{display:"flex",gap:5,paddingLeft:16,flexWrap:"nowrap",alignItems:"center"}}>
+                      {ls.spec&&ls.spec!=="—"&&<Tag>{ls.spec}</Tag>}
+                      {ls.brand&&<Tag color={T.green}>{ls.brand}</Tag>}
+                      <select value={cs} onChange={e=>{const s=window.scrollY;setSuppStatus(i,e.target.value);requestAnimationFrame(()=>window.scrollTo(0,s));}} style={sel(sc)}>
                         <option value="covered">Covered</option><option value="ordered">Ordered</option>
                         <option value="topup">Top-up</option><option value="needed">Needed</option>
                         <option value="backup">Backup</option>
                       </select>
                     </div>
                   </div>
-                );
+                  );
+                })();
               })}
             </Card>
 
@@ -3165,7 +3635,7 @@
                       <Tag>{item.spec}</Tag><Tag>Qty {item.qty}</Tag>
                     </div>
                     <div style={{paddingLeft:16}}>
-                      <select value={cs} onChange={e=>setShopStatus(i,e.target.value)} style={sel(sc)}>
+                      <select value={cs} onChange={e=>{const s=window.scrollY;setShopStatus(i,e.target.value);requestAnimationFrame(()=>window.scrollTo(0,s));}} style={sel(sc)}>
                         <option value="covered">Covered</option><option value="ordered">Ordered</option>
                         <option value="topup">Top-up</option><option value="needed">Needed</option>
                         <option value="backup">Backup</option>
@@ -3182,7 +3652,7 @@
       const renderDiet = () => {
         const dow = new Date().getDay();
         const isSunday = dow === 0;
-        const toggleDiet = (id) => setDietOpen(p=>({...p,[id]:!p[id]}));
+        const toggleDiet = (id) => toggleExpandedCard(`diet-${id}`, `diet-card-${id}`);
 
         const meals = isSunday
           ? DIET_MEALS.map(m=>({...m, macros:{...m.macros, c:m.macros.c*2, cal:m.macros.cal+(m.macros.c*4)}}))
@@ -3228,36 +3698,26 @@
             )}
 
             <SectionLabel>{isSunday?"REFEED TARGETS":"DAILY TARGETS"}</SectionLabel>
-            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px",marginBottom:8}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-                <div>
-                  <div style={{fontSize:28,fontWeight:800,color:"#38BDF8",letterSpacing:"-0.5px",lineHeight:1}}>{totalP}g</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginTop:3,fontWeight:600,letterSpacing:"0.06em"}}>PROTEIN</div>
+            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"12px 14px",marginBottom:8}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"baseline",gap:4}}>
+                  <span style={{fontSize:22,fontWeight:800,color:"#38BDF8",letterSpacing:"-0.5px",lineHeight:1}}>{totalP}g</span>
+                  <span style={{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600,letterSpacing:"0.06em"}}>PROTEIN</span>
                 </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:22,fontWeight:700,color:"#fff"}}>{totalCal}</div>
-                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginTop:3,fontWeight:600,letterSpacing:"0.06em"}}>CALORIES</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:4}}>
+                  <span style={{fontSize:18,fontWeight:700,color:"#fff"}}>{totalCal}</span>
+                  <span style={{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600,letterSpacing:"0.06em"}}>KCAL</span>
                 </div>
-              </div>
-              <div style={{display:"flex",gap:8,marginBottom:10}}>
-                <div style={{flex:1,background:"rgba(245,158,11,0.1)",borderRadius:10,padding:"9px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:17,fontWeight:700,color:"#F59E0B"}}>{totalF}g</div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:1,fontWeight:600,letterSpacing:"0.05em"}}>FAT</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:4}}>
+                  <span style={{fontSize:15,fontWeight:700,color:"#F59E0B"}}>{totalF}g</span>
+                  <span style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontWeight:600}}>FAT</span>
                 </div>
-                <div style={{flex:1,background:"rgba(52,211,153,0.1)",borderRadius:10,padding:"9px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:17,fontWeight:700,color:"#34D399"}}>{totalC}g</div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:1,fontWeight:600,letterSpacing:"0.05em"}}>CARBS</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:4}}>
+                  <span style={{fontSize:15,fontWeight:700,color:"#34D399"}}>{totalC}g</span>
+                  <span style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontWeight:600}}>CARBS</span>
                 </div>
               </div>
               <MacroBar p={totalP} f={totalF} c={totalC}/>
-              <div style={{display:"flex",gap:12,marginTop:6}}>
-                {[["#38BDF8","Protein"],["#F59E0B","Fat"],["#34D399","Carbs"]].map(([col,lbl],i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
-                    <div style={{width:8,height:8,borderRadius:2,background:col,flexShrink:0}}/>
-                    <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{lbl}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <SectionLabel style={{marginTop:18}}>EATING WINDOW</SectionLabel>
@@ -3280,13 +3740,14 @@
 
             <SectionLabel>MEALS</SectionLabel>
             {meals.map((meal,mi)=>{
-              const isOpen = !!dietOpen[meal.id];
+              const isOpen = expandedCard === `diet-${meal.id}`;
               const isOptional = meal.id === "m4";
               return (
-                <div key={meal.id} style={{marginBottom:10}}>
+                <div key={meal.id} id={`diet-card-${meal.id}`} style={{marginBottom:10}}>
                   {isOptional&&(
                     <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",letterSpacing:"0.08em",marginBottom:5,paddingLeft:4}}>OPTIONAL — ONLY IF SHORT ON PROTEIN</div>
                   )}
+
                   <Card>
                     <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                       <div style={{width:38,height:38,borderRadius:10,background:`${meal.color}22`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -3378,7 +3839,351 @@
         );
       };
 
-            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,backup:()=><BackupTab theme={T}/>};
+            const renderSettings = () => {
+              const SettingRow = ({icon, iconColor, label, subtitle, right, onPress}) => (
+                <div onClick={onPress} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",cursor:onPress?"pointer":"default",WebkitTapHighlightColor:"transparent"}}>
+                  <div style={{width:34,height:34,borderRadius:9,background:`${iconColor}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Icon name={icon} size={17} color={iconColor}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:15,fontWeight:500,color:"#fff"}}>{label}</div>
+                    {subtitle&&<div style={{fontSize:13,color:"rgba(255,255,255,0.45)",marginTop:2}}>{subtitle}</div>}
+                  </div>
+                  {right&&<div style={{flexShrink:0}}>{right}</div>}
+                </div>
+              );
+
+              const Toggle = ({value, onToggle, color="#A78BFA"}) => (
+                <div onClick={onToggle} style={{width:51,height:31,borderRadius:16,cursor:"pointer",background:value?color:"rgba(255,255,255,0.2)",position:"relative",transition:"background 0.25s",flexShrink:0}}>
+                  <div style={{position:"absolute",top:2,left:value?"calc(100% - 29px)":"2px",width:27,height:27,borderRadius:"50%",background:"#fff",transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
+                </div>
+              );
+
+              const Divider = () => <div style={{height:1,background:"rgba(255,255,255,0.06)",marginLeft:16}}/>;
+
+              return (
+                <div>
+                  {/* Protocol */}
+                  {/* Schedule Configurator */}
+                  <SectionLabel>DISPLAY</SectionLabel>
+                  <Card style={{marginBottom:16}}>
+                    <SettingRow icon="appearance" iconColor={T.amber} label="Background"
+                      subtitle={bgMode === 'night' ? 'Night — deep dark sky' : 'Day — bright sky blue'}
+                      right={
+                        <div style={{display:"flex",gap:4,background:"rgba(255,255,255,0.07)",borderRadius:20,padding:3}}>
+                          {["day","night"].map(m=>(
+                            <div key={m} onClick={()=>{ setBgModeState(m); window.setBgMode(m); }} style={{padding:"5px 14px",borderRadius:16,fontSize:12,fontWeight:600,cursor:"pointer",WebkitTapHighlightColor:"transparent",background:bgMode===m?"rgba(167,139,250,0.3)":"transparent",color:bgMode===m?"#A78BFA":"rgba(255,255,255,0.4)",transition:"all 0.2s"}}>
+                              {m==="day"?"☀️ Day":"🌙 Night"}
+                            </div>
+                          ))}
+                        </div>
+                      }
+                    />
+                  </Card>
+
+                  <SectionLabel>DAY SCHEDULE</SectionLabel>
+                  {["weekday","weekend"].map(dayType => {
+                    const s = userSchedule[dayType];
+                    const cardId = `schedule-${dayType}`;
+                    const isOpen = expandedCard === cardId;
+                    const slots = dayType === "weekday"
+                      ? [
+                          {key:"preTrain", label:"Pre-Train Blend", color:T.green},
+                          {key:"training", label:"Training", color:T.amber},
+                          {key:"postTrain", label:"Post-Train Blend", color:T.amber},
+                          {key:"coffee",   label:"First Coffee", color:T.amber},
+                          {key:"meal1",    label:"Meal 1", color:T.teal},
+                          {key:"meal2",    label:"Meal 2", color:T.teal},
+                          {key:"meal3",    label:"Meal 3", color:T.teal},
+                          {key:"evening",  label:"Evening Blend", color:T.violet},
+                          {key:"sleep",    label:"Pre-Sleep", color:"#8B7FE8"},
+                        ]
+                      : [
+                          {key:"morning",  label:"Morning Blend", color:T.green},
+                          {key:"coffee",   label:"Coffee + Meal 1", color:T.amber},
+                          {key:"meal1",    label:"Meal 1", color:T.teal},
+                          {key:"meal2",    label:"Meal 2", color:T.teal},
+                          {key:"meal3",    label:"Meal 3", color:T.teal},
+                          {key:"evening",  label:"Evening Blend", color:T.violet},
+                          {key:"sleep",    label:"Pre-Sleep", color:"#8B7FE8"},
+                        ];
+                    return (
+                      <Card key={dayType} style={{marginBottom:10}}>
+                        <div onClick={()=>toggleExpandedCard(cardId, `schedule-card-${dayType}`)} id={`schedule-card-${dayType}`} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                          <span style={{fontSize:15,fontWeight:500,color:"#fff"}}>{dayType === "weekday" ? "Weekdays (Mon–Fri)" : "Weekends (Sat–Sun)"}</span>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <span style={{fontSize:13,color:"rgba(255,255,255,0.35)"}}>{slots.length}</span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:isOpen?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
+                              <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        </div>
+                        {isOpen && (
+                          <div style={{borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+                            {slots.map((slot,si) => {
+                              const val = s[slot.key] ?? 0;
+                              const hrs = Math.floor(val);
+                              const mins = Math.round((val - hrs) * 60);
+                              return (
+                                <div key={slot.key} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                                  <div style={{width:8,height:8,borderRadius:"50%",background:slot.color,flexShrink:0}}/>
+                                  <span style={{fontSize:14,fontWeight:500,color:"#fff",flex:1}}>{slot.label}</span>
+                                  <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                                    <select
+                                      value={hrs}
+                                      onChange={e=>{const s=window.scrollY;updateSchedule(dayType,slot.key,parseInt(e.target.value)+mins/60);requestAnimationFrame(()=>window.scrollTo(0,s));}}
+                                      style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,padding:"5px 8px",outline:"none",cursor:"pointer"}}
+                                    >
+                                      {Array.from({length:24},(_,i)=>(<option key={i} value={i}>{i===0?12:i>12?i-12:i}</option>))}
+                                    </select>
+                                    <select
+                                      value={mins}
+                                      onChange={e=>{const s=window.scrollY;updateSchedule(dayType,slot.key,hrs+parseInt(e.target.value)/60);requestAnimationFrame(()=>window.scrollTo(0,s));}}
+                                      style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,padding:"5px 8px",outline:"none",cursor:"pointer"}}
+                                    >
+                                      {[0,15,30,45].map(m=>(<option key={m} value={m}>{String(m).padStart(2,"0")}</option>))}
+                                    </select>
+                                    <span style={{fontSize:12,color:"rgba(255,255,255,0.4)",minWidth:22}}>{hrs<12?"AM":"PM"}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            <div onClick={resetSchedule} style={{padding:"12px 16px",fontSize:13,color:"rgba(255,255,255,0.35)",cursor:"pointer",WebkitTapHighlightColor:"transparent",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.06)"}}>Reset to defaults</div>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                  
+                  <SectionLabel>PROTOCOL</SectionLabel>
+                  <Card style={{marginBottom:16}}>
+                    <SettingRow icon="today" iconColor={T.violet} label="Protocol Day"
+                      subtitle={protocolStartDate ? `Day ${protocolDay} · Week ${protocolWeek} of 20` : "Not started"}
+                      right={protocolStartDate&&<button onClick={resetProtocol} style={{background:"rgba(248,113,113,0.12)",border:"none",borderRadius:8,padding:"6px 12px",fontSize:13,fontWeight:600,color:"#F87171",cursor:"pointer"}}>Reset</button>}
+                    />
+                    <Divider/>
+                    <SettingRow icon="today" iconColor={T.amber} label="Start Date"
+                      subtitle={protocolStartDate ? new Date(protocolStartDate).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Tap to start"}
+                      onPress={!protocolStartDate?startProtocol:undefined}
+                      right={!protocolStartDate&&<span style={{fontSize:13,color:T.amber}}>Start ›</span>}
+                    />
+                  </Card>
+
+                  {/* Display */}
+                  {/* Data */}
+                  <SectionLabel>DATA</SectionLabel>
+                  <Card style={{marginBottom:16}}>
+                    <SettingRow icon="inventory" iconColor={T.green} label="Reset Peptide Inventory"
+                      subtitle="Restore all peptide stock to original quantities"
+                      onPress={()=>{
+                        const fresh = {};
+                        ORDERS.forEach((o,i)=>{ const t=parseTotalMg(o.mg); if(t!==null) fresh[i]=t; });
+                        setInvRemaining(fresh); LS.set("invRemaining",fresh);
+                      }}
+                      right={<span style={{fontSize:13,color:T.rose}}>Reset</span>}
+                    />
+                    <Divider/>
+                    <SettingRow icon="inventory" iconColor={T.teal} label="Reset Supplement Inventory"
+                      subtitle="Restore all supplement counts to original quantities"
+                      onPress={()=>{
+                        const fresh = {};
+                        LOCAL_SUPPS.forEach((ls,i)=>{ const t=parseSuppCount(ls.spec); if(t!==null) fresh[i]=t; });
+                        setSuppInvRemaining(fresh); LS.set("suppInvRemaining",fresh);
+                      }}
+                      right={<span style={{fontSize:13,color:T.rose}}>Reset</span>}
+                    />
+                    <Divider/>
+                    <SettingRow icon="calculator" iconColor={T.amber} label="Clear Saved Doses"
+                      subtitle="Remove all calculator results"
+                      onPress={()=>{ setSavedDoses({}); LS.set("savedDoses",{}); }}
+                      right={<span style={{fontSize:13,color:T.rose}}>Clear</span>}
+                    />
+                    <Divider/>
+                    <SettingRow icon="today" iconColor={T.rose} label="Clear All Checklists"
+                      subtitle="Wipes all daily check history"
+                      onPress={()=>{
+                        for(let i=0;i<90;i++){const d=new Date();d.setDate(d.getDate()-i);localStorage.removeItem(`chk-${d.toISOString().split("T")[0]}`);}
+                        setChk({});
+                      }}
+                      right={<span style={{fontSize:13,color:T.rose}}>Clear</span>}
+                    />
+                  </Card>
+
+                  {/* App info */}
+                  <SectionLabel>APP</SectionLabel>
+                  <Card style={{marginBottom:16}}>
+                    <SettingRow icon="stack" iconColor="rgba(255,255,255,0.4)" label="Protocol Version"
+                      subtitle="Nick Trigili 20-Week Fat Loss & Recomp"
+                      right={<span style={{fontSize:13,color:"rgba(255,255,255,0.3)"}}>v2.0</span>}
+                    />
+                    <Divider/>
+                    <SettingRow icon="backup" iconColor="rgba(255,255,255,0.4)" label="Backup & Restore"
+                      subtitle="Export or import your data"
+                      onPress={()=>{setTab("backup");setShowMore(false);}}
+                      right={<span style={{fontSize:15,color:"rgba(255,255,255,0.4)"}}>›</span>}
+                    />
+                  </Card>
+                </div>
+              );
+            };
+
+            const renderTimeline = () => {
+              const TIMELINE_PHASES = [
+                {
+                  id:"p1", label:"Weeks 1–4", title:"Adaptation & Titration",
+                  startWeek:1, endWeek:4, color:C.amber,
+                  subtitle:"Full peptide stack starts Day 1. Retatrutide titration only. Baseline bloodwork.",
+                  outcomes:[
+                    "Full stack running from Day 1 — only Reta dose is being titrated",
+                    "Appetite suppression within 3–7 days",
+                    "Mild nausea from Reta — resolves by week 2",
+                    "Fasted glucose stabilizing on CGM",
+                    "Initial visceral fat mobilization begins",
+                  ],
+                  milestones:[
+                    "Retatrutide: 0.5mg → 1mg",
+                    "Baseline bloodwork (IGF-1, fasting insulin, CMP)",
+                    "All oral supplements introduced",
+                    "Injection technique dialed in",
+                  ],
+                  retatrutide:"0.5 → 1mg",
+                },
+                {
+                  id:"p2", label:"Weeks 5–12", title:"Primary Fat Loss",
+                  startWeek:5, endWeek:12, color:C.cyan,
+                  subtitle:"Full stack running. Maximum fat oxidation. Muscle preservation.",
+                  outcomes:[
+                    "1–2 lbs fat loss per week",
+                    "Improved body composition visibly",
+                    "CGM glucose flattening",
+                    "Better sleep quality from DSIP + Epithalon",
+                    "Joint/gut recovery from BPC-157 + KPV",
+                  ],
+                  milestones:[
+                    "Retatrutide: 1mg → 2mg",
+                    "Bloodwork at week 6 (adjust if needed)",
+                    "InBody/DEXA scan at week 8",
+                    "AOD-9604 fasted window optimized",
+                  ],
+                  retatrutide:"1 → 2mg",
+                },
+                {
+                  id:"p3", label:"Weeks 13–20", title:"Recomp & Peak",
+                  startWeek:13, endWeek:20, color:C.violet,
+                  subtitle:"Body recomp phase. GH peptides prioritized. DEXA-guided adjustment.",
+                  outcomes:[
+                    "Lean mass maintained or gained",
+                    "Visceral fat near target",
+                    "HRV and recovery improving",
+                    "Skin and connective tissue improvement from GHK-Cu",
+                  ],
+                  milestones:[
+                    "Retatrutide: 2mg → 2–4mg (DEXA-guided)",
+                    "DEXA scan at week 12 — adjust protocol",
+                    "Bloodwork at week 14",
+                    "Evaluate BPC-157/KPV cycle status",
+                  ],
+                  retatrutide:"2 → 4mg",
+                },
+                {
+                  id:"p4", label:"Week 20", title:"Assessment & Exit Decision",
+                  startWeek:20, endWeek:20, color:C.green,
+                  subtitle:"Final DEXA + full bloodwork. Trigger exit or extend.",
+                  outcomes:[
+                    "Target body fat % reached",
+                    "All bloodwork markers in range",
+                    "Lean mass delta measured",
+                    "Metabolic flexibility maintained",
+                  ],
+                  milestones:[
+                    "Final DEXA scan + InBody",
+                    "Full bloodwork panel",
+                    "Exit protocol decision",
+                    "Transition to maintenance stack",
+                  ],
+                  retatrutide:"Taper or maintain",
+                },
+              ];
+
+              const currentWeek = protocolWeek || 0;
+
+              return (
+                <div style={{paddingBottom:24}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.08em",marginBottom:16}}>20-WEEK PROTOCOL TIMELINE</div>
+
+                  {/* Timeline */}
+                  <div style={{position:"relative"}}>
+                    {/* Vertical line */}
+                    <div style={{position:"absolute",left:52,top:8,bottom:8,width:2,background:"rgba(255,255,255,0.08)",borderRadius:1}}/>
+
+                    {TIMELINE_PHASES.map((phase, pi) => {
+                      const isActive = currentWeek >= phase.startWeek && currentWeek <= phase.endWeek;
+                      const isPast = currentWeek > phase.endWeek;
+                      const isFuture = currentWeek < phase.startWeek;
+                      const expanded = expandedCard === `timeline-${phase.id}`;
+                      const toggleExpanded = () => toggleExpandedCard(`timeline-${phase.id}`, `timeline-phase-${phase.id}`);
+
+                      return (
+                        <div key={phase.id} id={`timeline-phase-${phase.id}`} style={{display:"flex",gap:12,marginBottom:10,position:"relative"}}>
+                          {/* Week label + dot */}
+                          <div style={{width:38,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:2}}>
+                            <div style={{fontSize:11,fontWeight:700,color:isActive?phase.color:isPast?"#34D399":"rgba(255,255,255,0.3)",marginBottom:5,whiteSpace:"nowrap",letterSpacing:"0.04em"}}>{phase.label.split("–")[0].trim()}</div>
+                            <div style={{width:12,height:12,borderRadius:"50%",background:isActive?phase.color:isPast?"#34D399":"rgba(255,255,255,0.15)",border:`2px solid ${isActive?phase.color:isPast?"#34D399":"rgba(255,255,255,0.2)"}`,boxShadow:isActive?`0 0 10px ${phase.color}80`:"none",flexShrink:0,zIndex:1}}/>
+                          </div>
+
+                          {/* Card */}
+                          <div style={{flex:1,background:isActive?`${phase.color}18`:"rgba(255,255,255,0.08)",border:`1px solid ${isActive?`${phase.color}40`:isPast?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.1)"}`,borderRadius:14,overflow:"hidden",opacity:(protocolStartDate&&isFuture)?0.6:1,transition:"all 0.2s"}}>
+                            {/* Header */}
+                            <div onClick={toggleExpanded} style={{padding:"11px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
+                                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                                  <span style={{fontSize:15,fontWeight:600,color:isActive?phase.color:isPast?"#34D399":"#fff"}}>{phase.title}</span>
+                                  {isActive&&<span style={{fontSize:11,fontWeight:700,color:phase.color,background:`${phase.color}20`,padding:"2px 7px",borderRadius:6,letterSpacing:"0.06em"}}>NOW</span>}
+                                  {isPast&&<span style={{fontSize:11,fontWeight:700,color:"#34D399",background:"rgba(52,211,153,0.12)",padding:"2px 7px",borderRadius:6}}>✓</span>}
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:expanded?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
+                                  <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </div>
+                              <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginBottom:7}}>{phase.subtitle}</div>
+                              <span style={{fontSize:12,fontWeight:700,color:C.rose,background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.2)",padding:"2px 8px",borderRadius:6}}>Reta: {phase.retatrutide}</span>
+                            </div>
+
+                            {/* Expanded content */}
+                            {expanded && (
+                              <div style={{borderTop:"1px solid rgba(255,255,255,0.07)",background:"rgba(0,0,0,0.35)"}}>
+                                {/* Outcomes */}
+                                <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                                  <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.45)",letterSpacing:"0.08em",marginBottom:8}}>WHAT TO EXPECT</div>
+                                  {phase.outcomes.map((o,i)=>(
+                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:6}}>
+                                      <div style={{width:6,height:6,borderRadius:"50%",background:phase.color,flexShrink:0,marginTop:5}}/>
+                                      <span style={{fontSize:13,color:"#fff",lineHeight:1.5}}>{o}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {/* Milestones */}
+                                <div style={{padding:"12px 16px"}}>
+                                  <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.45)",letterSpacing:"0.08em",marginBottom:8}}>MILESTONES</div>
+                                  {phase.milestones.map((m,i)=>(
+                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:6}}>
+                                      <div style={{fontSize:12,color:phase.color,flexShrink:0,marginTop:1}}>◆</div>
+                                      <span style={{fontSize:13,color:"#fff",lineHeight:1.5}}>{m}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            };
+
+            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
 
       // Bottom tab bar config
       const PRIMARY_TABS = [
@@ -3409,9 +4214,54 @@
       const [suppOpen, setSuppOpen] = useState(false);
       const [dailySuppOpen, setDailySuppOpen] = useState(false);
       const [dietOpen, setDietOpen] = useState({});
+      const [timelineExpanded, setTimelineExpanded] = useState({});
+      const [bgMode, setBgModeState] = useState(() => localStorage.getItem('bgMode') || (new Date().getHours()>=20||new Date().getHours()<6?'night':'day'));
+
+      // ── Single expanded card across whole app ─────────────────────────────
+      const [expandedCard, setExpandedCard] = useState(null);
+      const toggleExpandedCard = (id, elId) => {
+        const opening = expandedCard !== id;
+        setExpandedCard(opening ? id : null);
+        // Close all legacy state
+        setExpandedLayers({});
+        setSuppOpen(false);
+        setDailySuppOpen(false);
+        setDietOpen({});
+        setTimelineExpanded({});
+        if (opening && elId) setTimeout(()=>document.getElementById(elId)?.scrollIntoView({behavior:"smooth",block:"start"}),50);
+      };
       const [savedDoses, setSavedDoses] = useState(() => LS.get("savedDoses", {}));
+
+      // ── User Schedule ──────────────────────────────────────────────────────
+      const DEFAULT_SCHEDULE = {
+        weekday: { preTrain:5.5, training:6, postTrain:7.5, coffee:9, meal1:9.5, meal2:12, meal3:17, evening:20, sleep:22 },
+        weekend: { morning:9, coffee:10, meal1:10.1, meal2:13, meal3:18, evening:20, sleep:22 },
+      };
+
+      const [userSchedule, setUserSchedule] = useState(() => LS.get("userSchedule", DEFAULT_SCHEDULE));
+
+      const updateSchedule = (dayType, slot, val) => {
+        const next = {...userSchedule, [dayType]:{...userSchedule[dayType],[slot]:val}};
+        setUserSchedule(next); LS.set("userSchedule", next);
+      };
+
+      const resetSchedule = () => { setUserSchedule(DEFAULT_SCHEDULE); LS.set("userSchedule", DEFAULT_SCHEDULE); };
+
+      // Format decimal hour → "5:30 AM"
+      const fmtHour = (h) => {
+        const hr = Math.floor(h); const min = Math.round((h - hr) * 60);
+        const ampm = hr < 12 ? "AM" : "PM";
+        const displayHr = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+        return `${displayHr}:${String(min).padStart(2,"0")} ${ampm}`;
+      };
       const saveDose = (peptideName, data) => {
         const next = {...savedDoses, [peptideName]: data};
+        setSavedDoses(next);
+        LS.set("savedDoses", next);
+      };
+      const deleteDose = (peptideName) => {
+        const next = {...savedDoses};
+        delete next[peptideName];
         setSavedDoses(next);
         LS.set("savedDoses", next);
       };
@@ -3439,17 +4289,17 @@
 
       return (
         <div
-          style={{background:"#162844", minHeight:"100vh", color:"#fff"}}>
+          style={{background:"transparent", minHeight:"100vh", color:"#fff"}}>
 
           {/* Hero header — only on Today tab */}
           {tab === "daily" && !showMore && (
             <div style={{
-              background: "radial-gradient(ellipse 140% 100% at 50% -20%, rgba(14,116,212,0.5) 0%, rgba(23,80,160,0.3) 40%, rgba(22,40,68,0) 70%), linear-gradient(180deg, #1A3558 0%, #162844 60%)",
-              padding:`calc(env(safe-area-inset-top) + 24px) 22px 26px`,
+              background: "radial-gradient(ellipse 140% 100% at 50% -20%, rgba(14,116,212,0.4) 0%, rgba(23,80,160,0.2) 40%, transparent 70%)",
+              padding:`calc(env(safe-area-inset-top) + 24px) 22px 8px`,
               position:"relative"
             }}>
               {/* Top row: date + protocol badge */}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
                 <div>
                   <div style={{fontSize:15,color:"rgba(255,255,255,0.75)",fontWeight:500,marginBottom:2}}>{dateStr}</div>
                   <div style={{fontSize:34,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.1}}>{greeting()}</div>
@@ -3464,22 +4314,33 @@
 
               {/* Metric bubbles row — only shown once protocol started */}
               {protocolStartDate && (
-                <div style={{display:"flex",gap:12,marginTop:22,overflowX:"auto",paddingBottom:4,marginLeft:-22,marginRight:-22,paddingLeft:22,paddingRight:22}}>
-                  {metrics.map((m,i)=>(
-                    <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,flexShrink:0}}>
-                      <div style={{
-                        width:72,height:72,borderRadius:"50%",
-                        background:"rgba(255,255,255,0.12)",
-                        border:"1px solid rgba(255,255,255,0.15)",
-                        backdropFilter:"blur(8px)",
-                        display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2
-                      }}>
-                        <Icon name={m.icon} size={20} color="rgba(255,255,255,0.9)"/>
-                        <span style={{fontSize:15,fontWeight:700,color:"#fff",lineHeight:1}}>{m.val}</span>
+                <div style={{display:"flex",gap:6,marginTop:8,justifyContent:"space-between",paddingBottom:4}}>
+                  {metrics.map((m,i)=>{
+                    const hasVal = m.val !== "—";
+                    return (
+                      <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1}}>
+                        <div style={{
+                          width:64,height:64,borderRadius:"50%",
+                          background:"rgba(255,255,255,0.12)",
+                          border:"1px solid rgba(255,255,255,0.15)",
+                          backdropFilter:"blur(8px)",
+                          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2
+                        }}>
+                          {hasVal ? (
+                            <>
+                              <span style={{fontSize:14,fontWeight:700,color:"#fff",lineHeight:1}}>{m.val}</span>
+                              <span style={{fontSize:8,fontWeight:600,color:"rgba(255,255,255,0.5)",letterSpacing:"0.04em",lineHeight:1}}>{m.label.toUpperCase()}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Icon name={m.icon} size={17} color="rgba(255,255,255,0.5)"/>
+                              <span style={{fontSize:8,fontWeight:600,color:"rgba(255,255,255,0.4)",letterSpacing:"0.04em",lineHeight:1}}>{m.label.toUpperCase()}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:500}}>{m.label}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -3503,7 +4364,7 @@
             tab === "daily" ? (
               <div style={{}}>{views[tab]?.()}</div>
             ) : tab === "tools" ? (
-              <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overscrollBehavior:"none",overflow:"hidden",height:`calc(100vh - 64px - env(safe-area-inset-bottom))`}}>{views[tab]?.()}</div>
+              <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overscrollBehavior:"contain",overflowY:"auto",height:`calc(100vh - 64px - env(safe-area-inset-bottom))`}}>{views[tab]?.()}</div>
             ) : ["diet","blending"].includes(tab) ? (
               <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`}}>
                 {views[tab]?.()}
@@ -3519,7 +4380,7 @@
 
           {/* More sheet */}
           {showMore && (
-            <div style={{padding:`calc(env(safe-area-inset-top) + 20px) 0 20px`, background:"#162844", minHeight:"100vh", overscrollBehavior:"none"}}>
+            <div style={{padding:`calc(env(safe-area-inset-top) + 20px) 0 20px`, background:"transparent", minHeight:"100vh", overscrollBehavior:"contain", overflowY:"auto", overflowX:"hidden"}}>
               <div style={{}}>
               <div style={{padding:"0 20px 16px"}}></div>
 
@@ -3534,18 +4395,16 @@
                 ))}
               </div>
 
-
-
-              {/* Protocol status */}
-              {protocolStartDate && (
-                <div style={{background:"rgba(255,255,255,0.07)",borderRadius:16,margin:"0 16px",border: "1px solid rgba(255,255,255,0.06)",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div>
-                    <div style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>Active Protocol</div>
-                    <div style={{fontSize:15,fontWeight:600,color:"#A78BFA",marginTop:2}}>Day {protocolDay} · Week {protocolWeek} of 20</div>
-                  </div>
-                  <button onClick={resetProtocol} style={{background:"rgba(248,113,113,0.12)",border:"none",borderRadius:8,padding:"7px 13px",fontSize:13,fontWeight:600,color:"#F87171",cursor:"pointer"}}>Reset</button>
+              {/* Cloud sync status */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"rgba(255,255,255,0.05)",borderRadius:12,margin:"0 16px"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:8,height:8,borderRadius:"50%",background:window._fbUid?"#34D399":"#F87171",flexShrink:0}}/>
+                  <span style={{fontSize:13,color:"rgba(255,255,255,0.65)"}}>{window._fbUid?"Syncing to Cloud":"Offline — local only"}</span>
                 </div>
-              )}
+                {window._fbUid&&<span style={{fontSize:11,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"}}>{window._fbUid.slice(0,8)}…</span>}
+              </div>
+
+
             </div>{/* end maxWidth wrapper */}
             </div>
           )}
@@ -3573,5 +4432,6 @@
       if (loading) { loading.classList.add('hide'); setTimeout(() => loading.remove(), 400); }
     }, 800);
   </script>
+
 </body>
 </html>
