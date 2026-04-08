@@ -1117,6 +1117,7 @@
     const PEPTIDE_LIST = ["AOD-9604","BPC-157","DSIP","Epithalon","Ipamorelin","KPV","L-Carnitine","Mots-c","Retatrutide","Selank","TB-500","Tesamorelin","5-Amino-1MQ","Sermorelin"];
 
     const TABS = [
+      {id:"ozempic",  label:"Ozempic",     icon:"inject"},
       {id:"daily",    label:"Today",       icon:"today"},
       {id:"blending", label:"Blending",    icon:"blending"},
       {id:"timeline",  label:"Timeline",    icon:"cycle"},
@@ -3164,6 +3165,85 @@
         );
       };
 
+      const renderOzempic = () => {
+        const ozSupps = [
+          {name:"Vitamin D3 + K2",   dose:"10,000 IU", timing:"With Meal 1",      note:"Hormonal support in deficit",     caps:"1 softgel"},
+          {name:"TUDCA",             dose:"500mg",     timing:"With Meal 1",      note:"Liver + bile support",            caps:"2 caps"},
+          {name:"Omega-3 (High EPA)",dose:"2g",        timing:"With Meal 1",      note:"Anti-inflammatory",               caps:"2 softgels"},
+          {name:"Dihydroberberine",  dose:"200mg",     timing:"With carb meal",   note:"Counters GLP-1 insulin resistance",caps:"1 cap"},
+          {name:"Digestive Enzymes", dose:"2 caps",    timing:"With every meal",  note:"GI prep for GLP-1 — prevents sulfur burps", caps:"2 caps"},
+          {name:"NAC",               dose:"500mg",     timing:"AM + Evening",     note:"Oxidative stress from fat loss",  caps:"1 cap × 2"},
+          {name:"Magnesium Citrate", dose:"420mg",     timing:"Pre-sleep",        note:"Constipation prevention",         caps:"1 cap"},
+        ];
+        const todayKey = new Date().toISOString().split("T")[0];
+        const allDone = ozSupps.every((_,i) => !!chk[`${todayKey}-ozsupp-${i}`]);
+        const doneCount = ozSupps.filter((_,i) => !!chk[`${todayKey}-ozsupp-${i}`]).length;
+
+        return (
+          <div style={{paddingBottom:24}}>
+            {/* Header card */}
+            <div style={{background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:16,padding:"16px",marginBottom:16}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                <div>
+                  <div style={{fontSize:17,fontWeight:700,color:"#fff"}}>Pre-Protocol Phase</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.55)",marginTop:2}}>Ozempic 0.5mg/wk · Foundation supps</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:28,fontWeight:700,color:allDone?"#34D399":"#F59E0B",lineHeight:1}}>{doneCount}/{ozSupps.length}</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:2}}>today</div>
+                </div>
+              </div>
+              <div style={{height:4,background:"rgba(255,255,255,0.1)",borderRadius:2,overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:2,background:allDone?"#34D399":"#F59E0B",width:`${(doneCount/ozSupps.length)*100}%`,transition:"width 0.4s"}}/>
+              </div>
+            </div>
+
+            {/* Why these 7 */}
+            <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em",marginBottom:8}}>DAILY CHECKLIST</div>
+            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
+              {ozSupps.map((s,i) => {
+                const sk = `${todayKey}-ozsupp-${i}`;
+                const done = !!chk[sk];
+                return (
+                  <div key={i} onClick={()=>{const wasChecked=!!chk[sk];check(sk);adjustSuppInv(s.name,s.dose,!wasChecked);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderBottom:i<ozSupps.length-1?"1px solid rgba(255,255,255,0.07)":"none",cursor:"pointer",background:done?"rgba(52,211,153,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
+                    <div style={{width:22,height:22,borderRadius:"50%",border:`2px solid ${done?"#34D399":"rgba(245,158,11,0.5)"}`,background:done?"#34D399":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+                      {done&&<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                        <span style={{fontSize:14,fontWeight:500,color:done?"rgba(255,255,255,0.4)":"#fff",textDecoration:done?"line-through":"none"}}>{s.name}</span>
+                        <span style={{fontSize:12,color:"#F59E0B",background:"rgba(245,158,11,0.12)",padding:"2px 7px",borderRadius:5,fontWeight:600}}>{s.dose}</span>
+                        {s.caps&&<span style={{fontSize:11,color:"rgba(255,255,255,0.55)",background:"rgba(255,255,255,0.08)",padding:"2px 7px",borderRadius:5}}>{s.caps}</span>}
+                        <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{s.timing}</span>
+                      </div>
+                      <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:2}}>{s.note}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Ozempic injection reminder */}
+            <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.4)",letterSpacing:"0.08em",marginBottom:8}}>WEEKLY INJECTION</div>
+            <div style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"14px 16px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:36,height:36,borderRadius:10,background:"rgba(248,113,113,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <Icon name="inject" size={18} color="#F87171"/>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:15,fontWeight:600,color:"#fff"}}>Ozempic</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginTop:1}}>0.5mg · Weekly SubQ · Same day each week</div>
+                </div>
+                <span style={{fontSize:13,fontWeight:700,color:"#F87171",background:"rgba(248,113,113,0.12)",padding:"4px 10px",borderRadius:8}}>0.5mg</span>
+              </div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+                This tab disappears once you tap Start Protocol in Settings — your foundation supps move into the main protocol at that point.
+              </div>
+            </div>
+          </div>
+        );
+      };
+
       const renderTools = () => <ReconCalcWizard onSave={saveDose} onDelete={deleteDose} savedDoses={savedDoses}/>;
 
       // ─── Card primitives ──────────────────────────────────────────────────────
@@ -4044,6 +4124,24 @@
             const renderTimeline = () => {
               const TIMELINE_PHASES = [
                 {
+                  id:"pre", label:"Pre-Protocol", title:"Ozempic + Foundation",
+                  startWeek:0, endWeek:0, color:"#F59E0B",
+                  subtitle:"Building GI resilience and foundational support before peptide stack begins.",
+                  outcomes:[
+                    "GI system adapted to GLP-1 slowdown before Reta hits",
+                    "Liver, inflammation, and insulin response already supported",
+                    "No disruption when switching to Retatrutide",
+                    "Supplement routine locked in before complexity increases",
+                  ],
+                  milestones:[
+                    "Digestive Enzymes + Magnesium Citrate — start immediately",
+                    "TUDCA + Omega-3 + NAC — start with first meals",
+                    "D3+K2 + Dihydroberberine — start week 1",
+                    "All 7 supps consistent before peptides arrive",
+                  ],
+                  retatrutide:"Ozempic 0.5mg/wk",
+                },
+                {
                   id:"p1", label:"Weeks 1–4", title:"Adaptation & Titration",
                   startWeek:1, endWeek:4, color:C.amber,
                   subtitle:"Full peptide stack starts Day 1. Retatrutide titration only. Baseline bloodwork.",
@@ -4197,14 +4295,14 @@
               );
             };
 
-            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
+            const views = {ozempic:renderOzempic,daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
 
       // Bottom tab bar config
       const PRIMARY_TABS = [
+        {id:"ozempic",  label:"Ozempic",    icon:"inject"},
         {id:"daily",    label:"Today",      icon:"today"},
         {id:"diet",     label:"Diet",       icon:"meal"},
         {id:"blending", label:"Blending",   icon:"blending"},
-        {id:"tools",    label:"Calculator", icon:"calculator"},
         {id:"more",     label:"More",       icon:"more"},
       ];
       const MORE_TABS = TABS.filter(t => !PRIMARY_TABS.find(p => p.id === t.id));
