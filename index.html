@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -3938,12 +3938,10 @@
                 {dot:"#007AFF",label:"Shake allowed",detail:"8:00–8:30 PM · Water only"},
                 {dot:"#007AFF",label:"GH injection",detail:"9 PM → fasted state required"},
               ].map((row,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:i<3?8:0}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:row.dot,flexShrink:0,marginTop:3}}/>
-                  <div>
-                    <span style={{fontSize:13,fontWeight:600,color:"var(--text-main)"}}>{row.label}</span>
-                    <span style={{fontSize:13,color:"var(--text-muted)",marginLeft:6}}>{row.detail}</span>
-                  </div>
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:i<3?12:0}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:row.dot,flexShrink:0}}/>
+                  <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>{row.label}</span>
+                  <span style={{fontSize:12,fontWeight:400,color:"var(--text-muted)",marginLeft:"auto",flexShrink:0}}>{row.detail}</span>
                 </div>
               ))}
             </div>
@@ -3971,10 +3969,6 @@
                         </div>
                         <span style={{fontSize:11,color:"var(--text-main)",fontWeight:600,background:pillBg(meal.color),padding:"2px 8px",borderRadius:20}}>{meal.time}</span>
                       </div>
-                      <div style={{textAlign:"right",marginRight:8,flexShrink:0}}>
-                        <div style={{fontSize:11,fontWeight:600,color:"#007AFF"}}>{meal.macros.p}g P</div>
-                        <div style={{fontSize:11,color:"var(--text-muted)"}}>{meal.macros.cal} cal</div>
-                      </div>
                       <Chevron open={isOpen}/>
                     </div>
 
@@ -3982,14 +3976,6 @@
                       <div style={{borderTop:"1px solid var(--card-border)"}}>
                         <div style={{padding:"10px 16px",background:`${meal.color}0d`,fontSize:13,color:"var(--text-muted)",lineHeight:1.55,borderBottom:"1px solid var(--card-border)"}}>
                           {meal.note}
-                        </div>
-                        <div style={{display:"flex",gap:8,padding:"10px 16px",borderBottom:"1px solid var(--card-border)"}}>
-                          {[["P",meal.macros.p+"g","#007AFF"],["F",meal.macros.f+"g","#007AFF"],["C",meal.macros.c+"g","#007AFF"],["kcal",meal.macros.cal,"var(--text-muted)"]].map(([l,v,c],i)=>(
-                            <div key={i} style={{flex:1,textAlign:"center",background:"var(--card-bg)",borderRadius:8,padding:"7px 4px"}}>
-                              <div style={{fontSize:13,fontWeight:700,color:c}}>{v}</div>
-                              <div style={{fontSize:11,color:"var(--text-muted)",marginTop:1}}>{l}</div>
-                            </div>
-                          ))}
                         </div>
                         {meal.options.map((opt,oi)=>{
                           const optKey=`${meal.id}-opt${oi}`;
