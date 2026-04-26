@@ -578,6 +578,33 @@
       const _auth = firebase.auth();
       const _db   = firebase.firestore();
 
+      // Enable offline persistence (survive network drops, cache for offline use)
+      _db.enablePersistence({ synchronizeTabs: true }).catch(function(e) {
+        if (e.code === 'failed-precondition') {
+          // Multiple tabs open — persistence only works in one tab at a time
+          console.warn('Firestore persistence unavailable — multiple tabs open');
+        } else if (e.code === 'unimplemented') {
+          console.warn('Firestore persistence not supported in this browser');
+        }
+      });
+
+      // ── Debounced write queue — batch rapid writes (e.g. checkbox taps) ───────
+      let _writeQueue = {};
+      let _writeTimer = null;
+      function _flushWrites() {
+        if (!window._fbUid || !Object.keys(_writeQueue).length) return;
+        const batch = _db.batch();
+        const userRef = _db.collection('users').doc(window._fbUid);
+        Object.entries(_writeQueue).forEach(function([key, value]) {
+          const isChk = key.startsWith('chk-');
+          const col   = isChk ? 'checklist' : 'data';
+          const docId = isChk ? key.replace('chk-', '') : key;
+          batch.set(userRef.collection(col).doc(docId), { v: value });
+        });
+        _writeQueue = {};
+        batch.commit().catch(function(e) { console.warn('Firestore batch write failed:', e); });
+      }
+
       // ── Google Sign-In ──────────────────────────────────────────────────────
       window._fbAuth = _auth;
       window._fbDb   = _db;
@@ -611,13 +638,13 @@
 
       window._fbSet = function(key, value) {
         if (!window._fbUid) return;
-        const isChk = key.startsWith('chk-');
-        const col   = isChk ? 'checklist' : 'data';
-        const docId = isChk ? key.replace('chk-', '') : key;
-        _db.collection('users').doc(window._fbUid)
-           .collection(col).doc(docId)
-           .set({ v: value })
-           .catch(function() {});
+        _writeQueue[key] = value;
+        clearTimeout(_writeTimer);
+        if (window._fbOnWrite) window._fbOnWrite('pending');
+        _writeTimer = setTimeout(function() {
+          _flushWrites();
+          if (window._fbOnWrite) window._fbOnWrite('saved');
+        }, 2000);
       };
 
       window._fbPull = async function(uid) {
@@ -661,16 +688,32 @@
           await window._fbPush(result.user.uid);
           return result.user;
         } catch(e) {
+          // Popup blocked (common on GitHub Pages / iOS Safari) — fall back to redirect
+          if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+            await _auth.signInWithRedirect(provider);
+            return null; // Page will reload
+          }
           console.warn('Google sign-in failed:', e);
           throw e;
         }
       };
 
+      // Handle redirect result on page load (GitHub Pages redirect flow)
+      _auth.getRedirectResult().then(async function(result) {
+        if (result && result.user) {
+          await window._fbPush(result.user.uid);
+        }
+      }).catch(function(e) { console.warn('Redirect result error:', e); });
+
       window._fbSignOut = async function() {
+        _flushWrites(); // flush any pending writes before signing out
         await _auth.signOut();
         window._fbUid = null;
         window._fbUser = null;
       };
+
+      // Flush pending writes before page unload
+      window.addEventListener('beforeunload', _flushWrites);
 
     } catch(e) {
       console.warn('Firebase unavailable:', e.message, '— running offline with localStorage only');
@@ -898,14 +941,14 @@
     // ═══════════════════════════════════════════════════
     const WEEKLY_INJECTIONS = {
       1: [
-        {name:"Retatrutide",dose:"0.5–4mg",method:"SubQ",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
-        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Systemic tissue repair, anti-inflammatory, connective tissue recovery. Pairs with BPC-157 — BPC handles local/gut repair, TB-500 handles systemic.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"TB-500",dose:"2–2.5mg",method:"Pen",purpose:"Systemic tissue repair, anti-inflammatory, connective tissue recovery. Pairs with BPC-157 — BPC handles local/gut repair, TB-500 handles systemic.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       3: [
-        {name:"TB-500",dose:"2–2.5mg",method:"SubQ",purpose:"Mid-week systemic repair dose — maintains connective tissue anti-inflammatory effect between Monday and Friday injections.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
+        {name:"TB-500",dose:"2–2.5mg",method:"Pen",purpose:"Mid-week systemic repair dose — maintains connective tissue anti-inflammatory effect between Monday and Friday injections.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       5: [
-        {name:"Retatrutide",dose:"0.5–4mg",method:"SubQ",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
       ],
       0: [], 2: [], 4: [], 6: [],
     };
@@ -927,18 +970,19 @@
     const BLENDS = [
       {id:"pre-train", time:"5:30 AM", label:"Pre-Train Injections", icon:"inject", color:C.green,
        items:[
-         {text:"Mots-c — 5mg",          type:"syringe", recon:"10mg vial + 2ml BAC → 5mg/ml",   drawLow:"1ml",  drawHigh:"1ml"},
+         {text:"Mots-c — 5mg",          type:"syringe", recon:"10mg vial + 1ml BAC → 10mg/ml",   drawLow:"0.5ml",  drawHigh:"0.5ml"},
          {text:"Selank — 100–200mcg",   type:"pen",     recon:"5mg vial + 3ml BAC → 1.67mg/ml", drawLow:"6u",   drawHigh:"12u"},
-         {text:"L-Carnitine — 500mg–1g",type:"syringe", recon:"Pre-mixed liquid 10ml vial @ 600mg/ml — draw direct, no BAC", drawLow:"0.83ml (500mg)", drawHigh:"1.67ml (1g)"},
-       ], note:"3 separate injections. Mots-c + L-Carnitine via syringe, Selank via pen."},
+         {text:"L-Carnitine — 300mg (dose 1/2)",type:"syringe", recon:"Pre-mixed liquid 10ml vial @ 600mg/ml — draw direct, no BAC", drawLow:"0.5ml", drawHigh:"0.5ml"},
+       ], note:"3 separate injections. Mots-c via syringe, Selank via pen, L-Carnitine 0.5ml syringe. Repeat L-Carnitine 0.5ml at post-train."},
       {id:"post-train-a", time:"7:30 AM", label:"Post-Train Injections", icon:"sun", color:C.amber,
        items:[
          {text:"AOD-9604 — 300mcg",     type:"pen",     recon:"10mg vial + 3ml BAC → 3.33mg/ml",  drawLow:"9u",   drawHigh:"9u"},
-         {text:"BPC-157 — 250–500mcg",  type:"pen",     recon:"10mg vial + 2.8ml BAC → 3.57mg/ml",drawLow:"7u",   drawHigh:"14u"},
+         {text:"BPC-157 — 500mcg",      type:"pen",     recon:"10mg vial + 2ml BAC → 5mg/ml",     drawLow:"10u",  drawHigh:"10u"},
          {text:"KPV — 500mcg–1mg",      type:"pen",     recon:"10mg vial + 3ml BAC → 3.33mg/ml",  drawLow:"15u",  drawHigh:"30u"},
-         {text:"GHK-Cu — 1–2mg",        type:"pen",     recon:"50mg vial + 3ml BAC → 16.67mg/ml", drawLow:"6u",   drawHigh:"12u"},
-         {text:"5-Amino-1MQ — 50mg",    type:"syringe", recon:"50mg vial + 1ml BAC → 50mg/ml",    drawLow:"0.1ml",drawHigh:"0.1ml"},
-       ], note:"5 separate injections. AOD-9604 fasted only — pH-sensitive. All others standalone."},
+         {text:"GHK-Cu — 2mg",          type:"pen",     recon:"50mg vial + 2.5ml BAC → 20mg/ml",  drawLow:"10u",  drawHigh:"10u"},
+         {text:"5-Amino-1MQ — 25mg (dose 1/2)",type:"syringe", recon:"50mg vial + 1ml BAC → 50mg/ml",    drawLow:"0.5ml",drawHigh:"0.5ml"},
+         {text:"L-Carnitine — 300mg (dose 2/2)",type:"syringe", recon:"Pre-mixed liquid 10ml vial @ 600mg/ml — draw direct, no BAC", drawLow:"0.5ml",drawHigh:"0.5ml"},
+       ], note:"7 separate injections. AOD-9604 fasted only — pH-sensitive. 5-Amino-1MQ dose 1 here, dose 2 at pre-sleep with Apigenin."},
       {id:"weekly", time:"Weekly", label:"Weekly Standalones", icon:"inject", color:C.rose,
        items:[
          {text:"Retatrutide",            type:"pen",     recon:"10mg vial + 3ml BAC → 3.33mg/ml",
@@ -960,8 +1004,11 @@
          {text:"DSIP — 100–200mcg",     type:"pen",     recon:"5mg vial + 3ml BAC → 1.67mg/ml",  drawLow:"6u",   drawHigh:"12u"},
        ], note:"3 separate pens. All require 2–3 hr fasted window. NAC + Astragalus oral alongside."},
       {id:"pre-sleep", time:"10:00 PM", label:"Pre-Sleep Injections", icon:"sleep", color:C.sleep,
-       items:[{text:"Epithalon — 5–10mg", note:"Syringe | Recon: 10mg vial + 2ml BAC → 5mg/ml | Draw 1–2ml | 10-day cycle only"}],
-       note:"Standalone syringe. 10-day cycle only — do not inject outside active cycle."},
+       items:[
+         {text:"5-Amino-1MQ — 25mg (dose 2/2)",type:"syringe", recon:"50mg vial + 1ml BAC → 50mg/ml", drawLow:"0.5ml", drawHigh:"0.5ml", note:"Pairs with Apigenin oral — full NAD+ double-block (NNMT + CD38)"},
+         {text:"Epithalon — 5–10mg", note:"Syringe | Recon: 10mg vial + 2ml BAC → 5mg/ml | Draw 1–2ml | 10-day cycle only"},
+       ],
+       note:"Standalone syringes. 5-Amino-1MQ + Apigenin oral = full NAD+ stack. Epithalon: 10-day cycle only."},
     ];
 
     // Helper: get injection note by id for Today tab
@@ -970,11 +1017,11 @@
     const DAILY = [
       { time:"5:30 AM", label:"Pre-Training — Fasted", icon:"inject", color:C.green, timeHour:5,
         weekendTime:"8:00 AM", weekendHour:8, weekendLabel:"Morning Blend — Fasted",
-        blend:blendNote("pre-train"),
+        blend:"Mots-c syringe + Selank pen (separate). L-Carnitine 0.5ml syringe (dose 1 of 2 — repeat at post-train).",
         items:[
-          {name:"Mots-c",dose:"5mg",method:"SubQ/IM",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
-          {name:"Selank",dose:"100–200mcg",method:"SubQ",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
-          {name:"L-Carnitine",dose:"500mg–1g",method:"SubQ/IM",purpose:"Shuttles mobilized fatty acids into mitochondria — maximizes fat oxidation during fasted training",t:false,cycle:{type:"daily"}},
+          {name:"Mots-c",dose:"5mg",method:"Syringe",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
+          {name:"Selank",dose:"100–200mcg",method:"Pen",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
+          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — shuttles mobilized fatty acids into mitochondria during peak fasted lipolysis window",t:false,cycle:{type:"daily"}},
           {name:"Alpha-GPC",dose:"300–600mg",method:"Oral",purpose:"Choline precursor — acetylcholine for mind-muscle connection + minor GH pulse stimulus. Synergizes with Selank for cognitive sharpness during fasted training",t:false,cycle:{type:"daily"}},
         ]},
       { time:"6:00 AM", label:"Training — Fasted", icon:"train", color:C.amber, timeHour:6, blend:null,
@@ -986,11 +1033,11 @@
         weekendTime:"9:00 AM", weekendHour:9, weekendLabel:"Post-Blend — Still Fasted",
         blend:"AOD-9604 pen — fasted only. BPC-157, KPV, GHK-Cu pens — standalone. 5-Amino-1MQ syringe — standalone. NAC + Astragalus oral.",
         items:[
-          {name:"AOD-9604",dose:"300mcg",method:"SubQ",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false,cycle:{type:"daily"}},
-          {name:"BPC-157",dose:"250–500mcg",method:"SubQ",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false,cycle:{type:"weeks",on:6,off:3,note:"6 wks on / 3 wks off"}},
-          {name:"KPV",dose:"500mcg–1mg",method:"SubQ",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
-          {name:"GHK-Cu",dose:"1–2mg",method:"SubQ",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
-          {name:"5-Amino-1MQ",dose:"50mg",method:"SubQ",purpose:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"AOD-9604",dose:"300mcg",method:"Pen",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false,cycle:{type:"daily"}},
+          {name:"BPC-157",dose:"500mcg",method:"Pen",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false,cycle:{type:"weeks",on:6,off:3,note:"6 wks on / 3 wks off"}},
+          {name:"KPV",dose:"500mcg–1mg",method:"Pen",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
+          {name:"GHK-Cu",dose:"2mg",method:"Pen",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
+          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — NNMT inhibitor, NAD+ preservation and fat cell reduction. Post-train metabolic window maximizes AMPK synergy with Mots-c",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
           {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
           {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true,cycle:{type:"daily"}},
         ]},
@@ -1016,16 +1063,17 @@
       { time:"2–3 hrs After Dinner", label:"Evening Blend", icon:"sunset", color:C.violet, timeHour:20,
         blend:blendNote("evening"),
         items:[
-          {name:"Tesamorelin",dose:"1–2mg",method:"SubQ",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false,cycle:{type:"daily"}},
-          {name:"Ipamorelin",dose:"200–300mcg",method:"SubQ",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
-          {name:"DSIP",dose:"100–200mcg",method:"SubQ",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
+          {name:"Tesamorelin",dose:"1–2mg",method:"Pen",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false,cycle:{type:"daily"}},
+          {name:"Ipamorelin",dose:"200–300mcg",method:"Pen",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
+          {name:"DSIP",dose:"100–200mcg",method:"Pen",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
           {name:"NAC",dose:"500mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true,cycle:{type:"daily"}},
           {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Second daily dose — kidney protection, telomere support",t:true,cycle:{type:"daily"}},
         ]},
       { time:"30–60 Min Before Bed", label:"Pre-Sleep", icon:"sleep", color:C.sleep, timeHour:22,
         blend:blendNote("pre-sleep"),
         items:[
-          {name:"Epithalon",dose:"5–10mg",method:"SubQ",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
+          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — pairs with Apigenin oral for full NAD+ double-block (NNMT + CD38 inhibition). Overnight fat oxidation support",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"Epithalon",dose:"5–10mg",method:"Syringe",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
           {name:"Myo-Inositol",dose:"2–4g",method:"Oral",purpose:"Insulin sensitizer + cortisol modulator — overnight glucose homeostasis, blunts morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning",t:false,cycle:{type:"daily"}},
           {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false,cycle:{type:"daily"}},
           {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
@@ -1203,7 +1251,7 @@
     const TABS = [
       {id:"ozempic",  label:"Ozempic",     icon:"inject"},
       {id:"daily",    label:"Today",       icon:"today"},
-      {id:"blending", label:"Stack",       icon:"blending"},
+      {id:"stack", label:"Stack",       icon:"blending"},
       {id:"timeline",  label:"Timeline",    icon:"cycle"},
       {id:"synergy",  label:"Stack Explained", icon:"stack"},
       {id:"cycle",    label:"Labs",        icon:"hrv"},
@@ -1350,7 +1398,7 @@
       {id:"ozempic",  label:"Ozempic",    icon:"inject"},
       {id:"daily",    label:"Today",      icon:"today"},
       {id:"diet",     label:"Diet",       icon:"meal"},
-      {id:"blending", label:"Stack",      icon:"blending"},
+      {id:"stack", label:"Stack",      icon:"blending"},
       {id:"more",     label:"More",       icon:"more"},
     ];
     const MORE_TABS = TABS.filter(t => !PRIMARY_TABS.find(p => p.id === t.id));
@@ -1439,7 +1487,7 @@
       return (
         <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,marginBottom:12,overflow:"hidden"}}>
           <div style={{padding:"14px 16px 4px"}}>
-            <SectionLabel>>NEXT INJECTION</SectionLabel>
+            <SectionLabel>NEXT INJECTION</SectionLabel>
             {enriched.map((s,i)=>{
               const isNext = s.label === nextWin.label;
               return (
@@ -1451,7 +1499,7 @@
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
                       <span style={{fontSize:13,fontWeight:isNext?600:400,color:s.isPast?"var(--text-muted)":isNext?"var(--text-main)":"var(--text-muted)",textDecoration:s.isPast?"line-through":"none"}}>{s.label}</span>
                       {s.isActive&&<span style={{fontSize:11,fontWeight:700,color:"var(--text-main)",background:`${s.color}18`,padding:"3px 8px",borderRadius:20}}>NOW</span>}
-                      {isNext&&!s.isActive&&<span style={{fontSize:11,fontWeight:700,color:"var(--text-main)",background:"var(--accent-12)",padding:"3px 8px",borderRadius:20}}>NEXT · {hrs>0?`${hrs}h `:""}${mins}m</span>}
+                      {isNext&&!s.isActive&&<span style={{fontSize:11,fontWeight:700,color:"var(--text-main)",background:"var(--accent-12)",padding:"3px 8px",borderRadius:20}}>NEXT · {hrs>0?`${hrs}h `:""}{mins}m</span>}
                       {s.isPast&&s.done===s.total&&s.total>0&&<span style={{fontSize:11,color:"var(--accent)"}}>✓</span>}
                       {s.isPast&&s.done<s.total&&<span style={{fontSize:11,fontWeight:600,color:"var(--text-muted)"}}>missed</span>}
                       {s.isUpcoming&&!isNext&&<span style={{fontSize:12,color:"var(--text-muted)"}}>{s.hour>12?s.hour-12:s.hour}:{String(s.min).padStart(2,"0")} {s.hour<12?"AM":"PM"}</span>}
@@ -1642,7 +1690,7 @@
               </div>
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                  <SectionLabel style={{marginBottom:0}}>>STACK READINESS</SectionLabel>
+                  <SectionLabel style={{marginBottom:0}}>STACK READINESS</SectionLabel>
                   {lastSynced&&<span style={{fontSize:11,color:"var(--text-main)",background:"var(--accent-12)",padding:"3px 8px",borderRadius:20}}><Icon name="backup" size={10} color="var(--accent)" style={{display:"inline-block",verticalAlign:"middle"}}/> {lastSynced}</span>}
                 </div>
                 <div style={{fontSize:13,fontWeight:500,color:bioColor,marginBottom:4}}>{statusText}</div>
@@ -1668,7 +1716,7 @@
             {/* Expanded bio inputs */}
             {expanded&&(
               <div style={{borderTop:"1px solid var(--card-border)",padding:"14px 16px"}}>
-                <SectionLabel style={{marginBottom:12}}>>BIO INPUTS</SectionLabel>
+                <SectionLabel style={{marginBottom:12}}>BIO INPUTS</SectionLabel>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
                   {[
                     {k:"sleep",label:"Sleep",min:0,max:12,step:0.5,unit:"h",score:sleepScore,sync:true},
@@ -1716,7 +1764,7 @@
       {name:"TB-500",     desc:"Systemic anti-inflammatory, connective tissue repair",             recDose:"2",     recUnit:"mg"},
       {name:"Tesamorelin",desc:"GHRH analog — FDA-validated visceral fat, nocturnal GH pulse",    recDose:"2",     recUnit:"mg"},
       {name:"5-Amino-1MQ",desc:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",       recDose:"50",    recUnit:"mg"},
-      {name:"GHK-Cu",      desc:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory", recDose:"1",     recUnit:"mg"},
+      {name:"GHK-Cu",      desc:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory", recDose:"2",     recUnit:"mg"},
       {name:"Alpha-GPC",   desc:"Choline precursor — acetylcholine, mind-muscle, minor GH pulse",         recDose:"300",   recUnit:"mg"},
       {name:"Myo-Inositol",desc:"Insulin sensitizer + cortisol modulator — pre-sleep glucose support",    recDose:"2000",  recUnit:"mg"},
     ];
@@ -1856,7 +1904,7 @@
         };
         return (
         <div>
-          <SectionLabel>>RECONSTITUTION CALCULATOR</SectionLabel>
+          <SectionLabel>RECONSTITUTION CALCULATOR</SectionLabel>
           <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,padding:"16px",marginBottom:12}}>
             <div style={{fontSize:13,fontWeight:600,color:"var(--text-main)",marginBottom:4}}>Select Peptide</div>
             <div style={{fontSize:13,color:"var(--text-muted)",marginBottom:12}}>Choose what you are reconstituting</div>
@@ -1905,7 +1953,7 @@
           {/* Saved doses */}
           {savedEntries.length > 0 && (
             <div style={{marginTop:20}}>
-              <SectionLabel>>SAVED DOSES</SectionLabel>
+              <SectionLabel>SAVED DOSES</SectionLabel>
               <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,overflow:"hidden"}}>
                 {savedEntries.map(([name, data], i)=>(
                   <div key={name} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:i<savedEntries.length-1?"1px solid var(--card-border)":"none"}}>
@@ -2036,7 +2084,7 @@
           {headerRow}{badgeRow}
           {/* Hero result */}
           <div style={{background:"var(--accent-12)",border:"1px solid rgba(99,102,241,0.25)",borderRadius:16,padding:"20px",marginBottom:12,textAlign:"center"}}>
-            <SectionLabel style={{marginBottom:8}}>>DRAW TO THIS LINE</SectionLabel>
+            <SectionLabel style={{marginBottom:8}}>DRAW TO THIS LINE</SectionLabel>
             <div style={{fontSize:52,fontWeight:700,color:"var(--text-main)",letterSpacing:"-2px",lineHeight:1}}>{unitsPerDose.toFixed(1)}</div>
             <div style={{fontSize:15,color:"var(--text-muted)",marginTop:4,marginBottom:16}}>units on U-100 syringe</div>
             <div style={{height:6,background:"var(--card-border)",borderRadius:3,overflow:"hidden",position:"relative"}}>
@@ -2118,6 +2166,12 @@
             setGoogleUser(window._fbUser || null);
           });
         }
+        // Wire write callback for live sync indicator
+        window._fbOnWrite = (state) => {
+          if (state === 'pending') setCloudStatus('saving');
+          if (state === 'saved')   setCloudStatus(window._fbUid ? 'connected' : 'offline');
+        };
+        return () => { window._fbOnWrite = null; };
       }, []);
 
       const doGoogleSignIn = async () => {
@@ -2144,7 +2198,7 @@
       return (
         <div>
           {/* Google Account / Cloud Sync */}
-          <SectionLabel>>ACCOUNT</SectionLabel>
+          <SectionLabel>ACCOUNT</SectionLabel>
           <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
             {googleUser ? (
               // Signed in
@@ -2196,11 +2250,11 @@
           {/* Sync status pill */}
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:12,marginBottom:16}}>
             <div style={{width:7,height:7,borderRadius:"50%",flexShrink:0,
-              background:cloudStatus==="connected"?C.green:cloudStatus==="connecting"?C.amber:"var(--text-muted)",
-              boxShadow:cloudStatus==="connected"?"0 0 6px rgba(52,199,89,0.5)":cloudStatus==="connecting"?"0 0 6px rgba(255,149,0,0.5)":"none"
+              background:cloudStatus==="connected"?C.green:cloudStatus==="saving"||cloudStatus==="connecting"?C.amber:"var(--text-muted)",
+              boxShadow:cloudStatus==="connected"?"0 0 6px rgba(52,199,89,0.5)":cloudStatus==="saving"||cloudStatus==="connecting"?"0 0 6px rgba(255,149,0,0.5)":"none"
             }}/>
             <span style={{fontSize:13,color:"var(--text-muted)"}}>
-              {cloudStatus==="connected"?"Syncing automatically to Google account":cloudStatus==="connecting"?"Connecting…":"Offline — data saved locally"}
+              {cloudStatus==="connected"?"Synced to Google account":cloudStatus==="saving"?"Saving…":cloudStatus==="connecting"?"Connecting…":"Offline — data saved locally"}
             </span>
           </div>
 
@@ -2479,7 +2533,7 @@
       const s = {
         app:{fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",background:"transparent",minHeight:"100vh",color:"var(--text-main)"},
         bk:(col)=>({background:"var(--card-bg)",border:"1px solid var(--card-border, rgba(255,255,255,0.1))",borderLeft:`1px solid ${col}`,borderRadius:14,marginBottom:10,overflow:"hidden",backdropFilter:"var(--glass-blur)",WebkitBackdropFilter:"var(--glass-blur)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)"}),
-        bkH:(col,o)=>({display:"flex",alignItems:"center",gap:10,padding:"14px 16px",cursor:"pointer",background:o?"rgba(255,255,255,0.02)":"transparent",transition:"background 0.15s",WebkitTapHighlightColor:"transparent"}),
+        bkH:(col,o)=>({display:"flex",alignItems:"center",gap:10,padding:"13px 16px",cursor:"pointer",background:o?"rgba(255,255,255,0.02)":"transparent",transition:"background 0.15s",WebkitTapHighlightColor:"transparent"}),
         timetag:(col)=>({background:`${col}18`,color:"var(--text-main)",fontSize:13,fontWeight:700,letterSpacing:"0.06em",padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap"}),
         chkRow:(done)=>({display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:done?"var(--accent-06)":"transparent",borderBottom:"1px solid var(--card-border)",cursor:"pointer",transition:"background 0.15s",WebkitTapHighlightColor:"transparent",minHeight:52}),
         cb:(done,col)=>({width:22,height:22,borderRadius:"50%",flexShrink:0,border:`2px solid ${done?"var(--accent)":"var(--text-muted)"}`,background:done?"var(--accent)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#fff",transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}),
@@ -3073,7 +3127,7 @@
                           <div key={j} style={{display:"flex",alignItems:"center",justifyContent:"space-between",paddingBottom:12}}>
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
                               <div style={{width:7,height:7,borderRadius:"50%",background:inj.color,flexShrink:0}}/>
-                              <span style={{fontSize:15,fontWeight:500,color:"var(--text-main)"}}>{inj.name}</span>
+                              <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>{inj.name}</span>
                             </div>
                             <span style={{fontSize:13,color:"var(--text-muted)"}}>{inj.dose}</span>
                           </div>
@@ -3178,7 +3232,7 @@
             <Card key={i} style={{marginBottom:10}}>
               <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px"}}>
                 <div style={{width:38,height:38,borderRadius:10,background:`${p.color}22`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:15,fontWeight:700,color:p.color}}>{i+1}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:p.color}}>{i+1}</span>
                 </div>
                 <div style={{flex:1}}>
                   <div style={{fontSize:13,fontWeight:600,color:"var(--text-main)",marginBottom:2}}>{p.phase}</div>
@@ -3485,7 +3539,7 @@
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
                       <div style={{display:"flex",alignItems:"center",gap:9}}>
                         <div style={{width:7,height:7,borderRadius:"50%",background:sc,flexShrink:0}}/>
-                        <span style={{fontSize:15,fontWeight:500,color:"var(--text-main)"}}>{item.item}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>{item.item}</span>
                       </div>
                       <span style={{fontSize:13,fontWeight:600,color:T.green}}>{item.est}</span>
                     </div>
@@ -3602,7 +3656,7 @@
                   )}
 
                   <Card>
-                    <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                    <div onClick={()=>toggleDiet(meal.id)} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                       <div style={{width:38,height:38,borderRadius:10,background:`${meal.color}18`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                         <Icon name={meal.icon} size={18} color={meal.color}/>
                       </div>
@@ -3628,7 +3682,7 @@
                           const optCal=opt.items.reduce((s,it)=>s+it.cal,0);
                           return(
                             <div key={oi} style={{borderBottom:"1px solid var(--card-border)"}}>
-                              <div onClick={()=>setDietOpen(p=>({...p,[optKey]:!p[optKey]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                              <div onClick={()=>setDietOpen(p=>({...p,[optKey]:!p[optKey]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
                                 <div style={{width:6,height:6,borderRadius:"50%",background:meal.color,flexShrink:0}}/>
                                 <span style={{flex:1,fontSize:14,fontWeight:500,color:"var(--text-muted)"}}>{opt.label}</span>
                                 <span style={{fontSize:13,color:"var(--accent)",fontWeight:600,marginRight:6}}>{optP}g P · {optCal} cal</span>
@@ -3689,7 +3743,7 @@
                     <Icon name={icon} size={17} color={iconColor}/>
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:15,fontWeight:500,color:"var(--text-main)"}}>{label}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>{label}</div>
                     {subtitle&&<div style={{fontSize:13,color:"var(--text-muted)",marginTop:2}}>{subtitle}</div>}
                   </div>
                   {right&&<div style={{flexShrink:0}}>{right}</div>}
@@ -3746,7 +3800,7 @@
                     return (
                       <Card key={dayType} style={{marginBottom:10}}>
                         <div onClick={()=>toggleExpandedCard(cardId)} id={`schedule-card-${dayType}`} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                          <span style={{fontSize:15,fontWeight:500,color:"var(--text-main)"}}>{dayType === "weekday" ? "Weekdays (Mon–Fri)" : "Weekends (Sat–Sun)"}</span>
+                          <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>{dayType === "weekday" ? "Weekdays (Mon–Fri)" : "Weekends (Sat–Sun)"}</span>
                           <div style={{display:"flex",alignItems:"center",gap:8}}>
                             <span style={{fontSize:13,color:"var(--text-muted)"}}>{slots.length}</span>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:isOpen?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
@@ -3763,7 +3817,7 @@
                               return (
                                 <div key={slot.key} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px",borderBottom:"1px solid var(--card-border)"}}>
                                   <div style={{width:8,height:8,borderRadius:"50%",background:slot.color,flexShrink:0}}/>
-                                  <span style={{fontSize:14,fontWeight:500,color:"var(--text-main)",flex:1}}>{slot.label}</span>
+                                  <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)",flex:1}}>{slot.label}</span>
                                   <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
                                     <select
                                       value={hrs}
@@ -3856,7 +3910,7 @@
                     <SettingRow icon="backup" iconColor="rgba(255,255,255,0.4)" label="Backup & Restore"
                       subtitle="Export or import your data"
                       onPress={()=>{setTab("backup");setShowMore(false);}}
-                      right={<span style={{fontSize:15,color:"var(--text-muted)"}}>›</span>}
+                      right={<Chevron open={false}/>}
                     />
                   </div>
                 </div>
@@ -3963,12 +4017,11 @@
 
               return (
                 <div style={{paddingBottom:24}}>
-                  <SectionLabel style={{marginBottom:16}}>20-WEEK PROTOCOL TIMELINE</SectionLabel>
+                  <SectionLabel style={{marginBottom:14}}>20-WEEK PROTOCOL TIMELINE</SectionLabel>
 
-                  {/* Timeline */}
                   <div style={{position:"relative"}}>
-                    {/* Vertical line */}
-                    <div style={{position:"absolute",left:52,top:8,bottom:8,width:2,background:"var(--card-border)",borderRadius:1}}/>
+                    {/* Vertical connector line */}
+                    <div style={{position:"absolute",left:16,top:12,bottom:12,width:1.5,background:"var(--card-border)",borderRadius:1,zIndex:0}}/>
 
                     {TIMELINE_PHASES.map((phase, pi) => {
                       const isActive = currentWeek >= phase.startWeek && currentWeek <= phase.endWeek;
@@ -3976,53 +4029,59 @@
                       const isFuture = currentWeek < phase.startWeek;
                       const expanded = isCardOpen(`timeline-${phase.id}`);
                       const toggleExpanded = () => toggleExpandedCard(`timeline-${phase.id}`);
+                      const dotColor = isActive ? phase.color : isPast ? "var(--accent)" : "var(--card-border)";
 
                       return (
-                        <div key={phase.id} id={`timeline-phase-${phase.id}`} style={{display:"flex",gap:12,marginBottom:10,position:"relative"}}>
-                          {/* Week label + dot */}
-                          <div style={{width:38,flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",paddingTop:2}}>
-                            <div style={{fontSize:11,fontWeight:700,color:isActive?phase.color:isPast?"var(--accent)":"var(--text-muted)",marginBottom:5,whiteSpace:"nowrap",letterSpacing:"0.04em"}}>{phase.label.split("–")[0].trim()}</div>
-                            <div style={{width:12,height:12,borderRadius:"50%",background:isActive?phase.color:isPast?"var(--accent)":"var(--card-border)",border:`2px solid ${isActive?phase.color:isPast?"var(--accent)":"var(--card-border)"}`,boxShadow:isActive?`0 0 10px ${phase.color}80`:"none",flexShrink:0,zIndex:1}}/>
+                        <div key={phase.id} style={{display:"flex",gap:12,marginBottom:10,position:"relative",zIndex:1}}>
+                          {/* Dot */}
+                          <div style={{width:33,flexShrink:0,display:"flex",justifyContent:"center",paddingTop:13}}>
+                            <div style={{width:10,height:10,borderRadius:"50%",
+                              background:dotColor,
+                              border:`2px solid ${dotColor}`,
+                              boxShadow:isActive?`0 0 8px ${phase.color}80`:"none",
+                              flexShrink:0}}/>
                           </div>
 
                           {/* Card */}
-                          <div style={{flex:1,background:isActive?`${phase.color}18`:"var(--card-bg)",border:`1px solid ${isActive?`${phase.color}40`:isPast?"var(--accent-20)":"rgba(255,255,255,0.1)"}`,borderRadius:14,overflow:"hidden",opacity:(protocolStartDate&&isFuture)?0.6:1,transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}}>
-                            {/* Header */}
-                            <div onClick={toggleExpanded} style={{padding:"11px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-                              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
-                                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                          <div style={{flex:1,background:"var(--card-bg)",border:`1px solid ${isActive?`${phase.color}40`:"var(--card-border)"}`,borderRadius:12,overflow:"hidden",opacity:isFuture&&protocolStartDate?0.55:1,transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}}>
+                            {/* Header row */}
+                            <div onClick={toggleExpanded} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
                                   <span style={{fontSize:13,fontWeight:600,color:isActive?phase.color:isPast?"var(--accent)":"var(--text-main)"}}>{phase.title}</span>
-                                  {isActive&&<span style={{fontSize:11,fontWeight:700,color:"var(--text-main)",background:`${phase.color}18`,padding:"2px 7px",borderRadius:20,letterSpacing:"0.06em"}}>NOW</span>}
-                                  {isPast&&<span style={{fontSize:11,fontWeight:700,color:"var(--accent)",background:"var(--accent-12)",padding:"2px 7px",borderRadius:6}}>✓</span>}
+                                  {isActive&&<span style={{fontSize:10,fontWeight:700,color:"var(--text-main)",background:`${phase.color}18`,padding:"1px 6px",borderRadius:20,letterSpacing:"0.06em",flexShrink:0}}>NOW</span>}
+                                  {isPast&&<span style={{fontSize:10,fontWeight:700,color:"var(--accent)",background:"var(--accent-12)",padding:"1px 6px",borderRadius:20,flexShrink:0}}>✓</span>}
                                 </div>
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{transform:expanded?"rotate(180deg)":"none",transition:"0.2s",flexShrink:0}}>
-                                  <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                                  <span style={{fontSize:11,color:"var(--text-muted)"}}>{phase.label}</span>
+                                  <span style={{fontSize:10,color:"var(--text-muted)"}}>·</span>
+                                  <span style={{fontSize:11,fontWeight:600,color:"var(--text-main)",background:"rgba(255,59,48,0.10)",padding:"1px 6px",borderRadius:20,flexShrink:0}}>{phase.retatrutide}</span>
+                                </div>
                               </div>
-                              <div style={{fontSize:13,color:"var(--text-muted)",marginBottom:7}}>{phase.subtitle}</div>
-                              <span style={{fontSize:12,fontWeight:700,color:"var(--text-main)",background:"rgba(255,59,48,0.12)",padding:"3px 10px",borderRadius:20}}>Reta: {phase.retatrutide}</span>
+                              <Chevron open={expanded}/>
                             </div>
 
                             {/* Expanded content */}
                             {expanded && (
-                              <div style={{borderTop:"1px solid var(--card-border)",background:"var(--card-bg)"}}>
+                              <div style={{borderTop:"1px solid var(--card-border)"}}>
+                                <div style={{padding:"10px 14px 6px",fontSize:12,color:"var(--text-muted)",lineHeight:1.55}}>{phase.subtitle}</div>
                                 {/* Outcomes */}
-                                <div style={{padding:"12px 16px",borderBottom:"1px solid var(--card-border)"}}>
-                                  <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:8}}>WHAT TO EXPECT</div>
+                                <div style={{padding:"6px 14px 10px",borderBottom:"1px solid var(--card-border)"}}>
+                                  <div style={{fontSize:10,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:6}}>WHAT TO EXPECT</div>
                                   {phase.outcomes.map((o,i)=>(
-                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                                      <div style={{width:6,height:6,borderRadius:"50%",background:phase.color,flexShrink:0,marginTop:5}}/>
-                                      <span style={{fontSize:13,color:"var(--text-main)",lineHeight:1.5}}>{o}</span>
+                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:7,marginBottom:5}}>
+                                      <div style={{width:5,height:5,borderRadius:"50%",background:phase.color,flexShrink:0,marginTop:5}}/>
+                                      <span style={{fontSize:12,color:"var(--text-main)",lineHeight:1.5}}>{o}</span>
                                     </div>
                                   ))}
                                 </div>
                                 {/* Milestones */}
-                                <div style={{padding:"12px 16px"}}>
-                                  <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:8}}>MILESTONES</div>
+                                <div style={{padding:"8px 14px 10px"}}>
+                                  <div style={{fontSize:10,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:6}}>MILESTONES</div>
                                   {phase.milestones.map((m,i)=>(
-                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                                      <div style={{fontSize:12,color:phase.color,flexShrink:0,marginTop:1}}>◆</div>
-                                      <span style={{fontSize:13,color:"var(--text-main)",lineHeight:1.5}}>{m}</span>
+                                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:7,marginBottom:5}}>
+                                      <span style={{fontSize:11,color:phase.color,flexShrink:0,marginTop:1}}>◆</span>
+                                      <span style={{fontSize:12,color:"var(--text-main)",lineHeight:1.5}}>{m}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -4037,7 +4096,7 @@
               );
             };
 
-            const views = {ozempic:renderOzempic,daily:renderDaily,tools:renderTools,weekly:renderWeekly,blending:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
+            const views = {ozempic:renderOzempic,daily:renderDaily,tools:renderTools,weekly:renderWeekly,stack:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
 
       // Bottom tab bar config
 
@@ -4188,7 +4247,7 @@
           )}
 
           {/* Non-Today tab header — fixed, scroll-aware, with back button */}
-          {tab !== "daily" && !showMore && !["diet","blending","ozempic"].includes(tab) && (
+          {tab !== "daily" && !showMore && !["diet","stack","ozempic"].includes(tab) && (
             <ScrollHeader
               tab={tab}
               tabs={TABS}
@@ -4203,7 +4262,7 @@
           {!showMore && (
             tab === "daily" ? (
               <div style={{overflowAnchor:"none"}}>{views[tab]?.()}</div>
-            ) : ["diet","blending","ozempic"].includes(tab) ? (
+            ) : ["diet","stack","ozempic"].includes(tab) ? (
               <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overflowAnchor:"none"}}>
                 {views[tab]?.()}
               </div>
