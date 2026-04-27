@@ -698,10 +698,14 @@
         }
       };
 
-      // Handle redirect result on page load (GitHub Pages redirect flow)
+      // Handle redirect result on page load (iOS Safari / GitHub Pages redirect flow)
       _auth.getRedirectResult().then(async function(result) {
         if (result && result.user) {
+          // First-time sign-in via redirect — push local data then reload
+          // so React initializes fresh with the authenticated state
           await window._fbPush(result.user.uid);
+          // Small delay to ensure Firestore write completes before reload
+          setTimeout(function() { window.location.reload(); }, 500);
         }
       }).catch(function(e) { console.warn('Redirect result error:', e); });
 
@@ -1019,8 +1023,8 @@
         weekendTime:"8:00 AM", weekendHour:8, weekendLabel:"Morning Blend — Fasted",
         blend:"Mots-c syringe + Selank pen (separate). L-Carnitine 0.5ml syringe (dose 1 of 2 — repeat at post-train).",
         items:[
-          {name:"Mots-c",dose:"5mg",method:"Syringe",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
           {name:"Selank",dose:"100–200mcg",method:"Pen",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
+          {name:"Mots-c",dose:"5mg",method:"Syringe",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
           {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — shuttles mobilized fatty acids into mitochondria during peak fasted lipolysis window",t:false,cycle:{type:"daily"}},
           {name:"Alpha-GPC",dose:"300–600mg",method:"Oral",purpose:"Choline precursor — acetylcholine for mind-muscle connection + minor GH pulse stimulus. Synergizes with Selank for cognitive sharpness during fasted training",t:false,cycle:{type:"daily"}},
         ]},
@@ -1038,6 +1042,7 @@
           {name:"KPV",dose:"500mcg–1mg",method:"Pen",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
           {name:"GHK-Cu",dose:"2mg",method:"Pen",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
           {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — NNMT inhibitor, NAD+ preservation and fat cell reduction. Post-train metabolic window maximizes AMPK synergy with Mots-c",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — continues fatty acid shuttling into mitochondria during post-train metabolic window",t:false,cycle:{type:"daily"}},
           {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
           {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true,cycle:{type:"daily"}},
         ]},
@@ -1074,9 +1079,9 @@
         items:[
           {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — pairs with Apigenin oral for full NAD+ double-block (NNMT + CD38 inhibition). Overnight fat oxidation support",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
           {name:"Epithalon",dose:"5–10mg",method:"Syringe",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
+          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
           {name:"Myo-Inositol",dose:"2–4g",method:"Oral",purpose:"Insulin sensitizer + cortisol modulator — overnight glucose homeostasis, blunts morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning",t:false,cycle:{type:"daily"}},
           {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false,cycle:{type:"daily"}},
-          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
           {name:"Melatonin",dose:"0.5–1mg",method:"Oral",purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse",t:false,cycle:{type:"daily"}},
         ]},
     ];
@@ -2178,6 +2183,7 @@
         setSigningIn(true); setSignInError('');
         try {
           const user = await window._fbSignIn();
+          if (!user) return; // redirect flow — page will reload, nothing to do
           setCloudUid(user.uid);
           setCloudStatus('connected');
           setGoogleUser({ uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL });
@@ -2901,7 +2907,10 @@
               </div>
               {isExpanded && (
                 <div style={{borderTop:"1px solid var(--card-border)"}}>
-                  {entry.items.map((item,ii) => {
+                  {[...entry.items].sort((a,b)=>{
+                    const order = {Pen:0,Syringe:1,Oral:2};
+                    return (order[a.method]??3) - (order[b.method]??3);
+                  }).map((item,ii) => {
                     const isWeekly = !!item.weekly;
                     const k = isWeekly
                       ? `${viewDay}-weekly-${item.weeklyIdx}`
@@ -3755,22 +3764,6 @@
                 <div>
                   {/* Protocol */}
                   {/* Schedule Configurator */}
-                  <SectionLabel>DISPLAY</SectionLabel>
-                  <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,marginBottom:16}}>
-                    <SettingRow icon="appearance" iconColor={T.amber} label="Background"
-                      subtitle={bgMode === 'night' ? 'Night — deep dark sky' : 'Day — clean light'}
-                      right={
-                        <div style={{display:"flex",gap:4,background:"var(--card-bg)",borderRadius:20,padding:3}}>
-                          {["day","night"].map(m=>(
-                            <div key={m} onClick={()=>{ setBgModeState(m); window.setBgMode(m); }} style={{padding:"5px 14px",borderRadius:16,fontSize:12,fontWeight:600,cursor:"pointer",WebkitTapHighlightColor:"transparent",background:bgMode===m?"rgba(0,122,255,0.3)":"transparent",color:bgMode===m?"var(--accent)":TC.muted,transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}}>
-                              {m==="day"?"☀️ Day":"🌙 Night"}
-                            </div>
-                          ))}
-                        </div>
-                      }
-                    />
-                  </div>
-
                   <SectionLabel>DAY SCHEDULE</SectionLabel>
                   {["weekday","weekend"].map(dayType => {
                     const s = userSchedule[dayType];
@@ -4281,6 +4274,25 @@
               <div style={{}}>
               <div style={{padding:"0 20px 16px"}}></div>
 
+              {/* Display toggle */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px",background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:12,margin:"0 16px 12px"}}>
+                <span style={{fontSize:13,fontWeight:500,color:"var(--text-main)"}}>
+                  {bgMode==="night" ? "🌙 Night" : "☀️ Day"}
+                </span>
+                <div style={{display:"flex",gap:4,background:"var(--card-border)",borderRadius:20,padding:3}}>
+                  {["day","night"].map(m=>(
+                    <div key={m} onClick={()=>{ setBgModeState(m); window.setBgMode(m); }}
+                      style={{padding:"5px 14px",borderRadius:16,fontSize:12,fontWeight:600,cursor:"pointer",
+                        WebkitTapHighlightColor:"transparent",
+                        background:bgMode===m?"var(--card-bg)":"transparent",
+                        color:bgMode===m?"var(--text-main)":"var(--text-muted)",
+                        transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}}>
+                      {m==="day"?"☀️ Day":"🌙 Night"}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Nav list */}
               <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",margin:"0 16px 16px"}}>
                 {MORE_TABS.map((t,i)=>(
@@ -4292,13 +4304,25 @@
                 ))}
               </div>
 
-              {/* Cloud sync status */}
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:"var(--card-bg)",borderRadius:12,margin:"0 16px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:window._fbUid?"var(--accent)":"rgba(255,255,255,0.5)",flexShrink:0}}/>
-                  <span style={{fontSize:13,color:"var(--text-muted)"}}>{window._fbUid?"Syncing to Cloud":"Offline — local only"}</span>
-                </div>
-                {window._fbUid&&<span style={{fontSize:11,color:"var(--text-muted)",fontFamily:"monospace"}}>{window._fbUid.slice(0,8)}…</span>}
+              {/* Account status */}
+              <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"var(--card-bg)",borderRadius:12,margin:"0 16px",border:"1px solid var(--card-border)"}}>
+                {window._fbUser ? (
+                  <>
+                    {window._fbUser.photo
+                      ? <img src={window._fbUser.photo} style={{width:28,height:28,borderRadius:"50%",flexShrink:0}} alt=""/>
+                      : <div style={{width:28,height:28,borderRadius:"50%",background:"var(--accent-12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:13}}>👤</div>
+                    }
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"var(--text-main)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{window._fbUser.email}</div>
+                    </div>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:C.green,flexShrink:0,boxShadow:"0 0 5px rgba(52,199,89,0.5)"}}/>
+                  </>
+                ) : (
+                  <>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:"var(--text-muted)",flexShrink:0}}/>
+                    <span style={{fontSize:12,color:"var(--text-muted)"}}>Not signed in — tap Backup to sync</span>
+                  </>
+                )}
               </div>
 
 
