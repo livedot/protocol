@@ -87,10 +87,14 @@
       user-select: none;
       -webkit-user-select: none;
     }
+    html, body {
+      height: 100%;
+      overscroll-behavior: none;
+    }
     #root {
       min-height: 100vh;
       min-height: -webkit-fill-available;
-      padding-bottom: calc(50px + env(safe-area-inset-bottom));
+      padding-bottom: calc(56px + env(safe-area-inset-bottom));
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
     }
@@ -101,7 +105,7 @@
     #tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: calc(50px + env(safe-area-inset-bottom));
+      height: calc(56px + env(safe-area-inset-bottom));
       padding-bottom: env(safe-area-inset-bottom);
       background: var(--tab-bar-bg, var(--tab-bg));
       backdrop-filter: var(--glass-blur);
@@ -110,10 +114,14 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-around;
-      padding-top: 6px;
+      padding-top: 8px;
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
       z-index: 1000;
+      /* GPU compositing — prevents tab bar from scrolling with momentum scroll on iOS */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: transform;
       transition: background 0.4s ease;
     }
     .tab-item {
@@ -945,14 +953,14 @@
     // ═══════════════════════════════════════════════════
     const WEEKLY_INJECTIONS = {
       1: [
-        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
-        {name:"TB-500",dose:"2–2.5mg",method:"Pen",purpose:"Systemic tissue repair, anti-inflammatory, connective tissue recovery. Pairs with BPC-157 — BPC handles local/gut repair, TB-500 handles systemic.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Triple agonist GLP-1/GIP/Glucagon — drives BMR up, kills food noise, mobilizes fat from liver and adipose",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"TB-500",dose:"5mg",method:"Pen",purpose:"Systemic tissue repair — promotes angiogenesis, reduces fibrosis, accelerates tendon and ligament healing. Works with BPC-157",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       3: [
-        {name:"TB-500",dose:"2–2.5mg",method:"Pen",purpose:"Mid-week systemic repair dose — maintains connective tissue anti-inflammatory effect between Monday and Friday injections.",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
+        {name:"TB-500",dose:"5mg",method:"Pen",purpose:"Systemic tissue repair — promotes angiogenesis, reduces fibrosis, accelerates tendon and ligament healing. Works with BPC-157",color:C.teal,timeHour:8.1,timeLabel:"7:30 AM",note:"Standalone SubQ — separate syringe, do NOT blend with post-train blend"},
       ],
       5: [
-        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Second weekly dose — maintains triple agonist GLP-1/GIP/Glucagon activity through the weekend.",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
+        {name:"Retatrutide",dose:"0.5–4mg",method:"Pen",purpose:"Triple agonist GLP-1/GIP/Glucagon — drives BMR up, kills food noise, mobilizes fat from liver and adipose",color:C.rose,timeHour:8,timeLabel:"7:30 AM",note:"Standalone SubQ — inject after post-train blend"},
       ],
       0: [], 2: [], 4: [], 6: [],
     };
@@ -984,6 +992,7 @@
          {text:"BPC-157 — 500mcg",      type:"pen",     recon:"10mg vial + 2ml BAC → 5mg/ml",     drawLow:"10u",  drawHigh:"10u"},
          {text:"KPV — 500mcg–1mg",      type:"pen",     recon:"10mg vial + 3ml BAC → 3.33mg/ml",  drawLow:"15u",  drawHigh:"30u"},
          {text:"GHK-Cu — 2mg",          type:"pen",     recon:"50mg vial + 2.5ml BAC → 20mg/ml",  drawLow:"10u",  drawHigh:"10u"},
+         {text:"Thymosin Alpha-1 — 1.6mg",     type:"syringe", recon:"5mg vial + 1ml BAC → 5mg/ml",       drawLow:"0.32ml",drawHigh:"0.32ml", note:"3–5x weekly Mon/Wed/Fri — immune recalibration, reduces CRP/IL-6 up to 40%"},
          {text:"5-Amino-1MQ — 25mg (dose 1/2)",type:"syringe", recon:"50mg vial + 1ml BAC → 50mg/ml",    drawLow:"0.5ml",drawHigh:"0.5ml"},
          {text:"L-Carnitine — 300mg (dose 2/2)",type:"syringe", recon:"Pre-mixed liquid 10ml vial @ 600mg/ml — draw direct, no BAC", drawLow:"0.5ml",drawHigh:"0.5ml"},
        ], note:"7 separate injections. AOD-9604 fasted only — pH-sensitive. 5-Amino-1MQ dose 1 here, dose 2 at pre-sleep with Apigenin."},
@@ -999,18 +1008,18 @@
             {wkStart:14,wkEnd:16, dose:"3mg",   draw:"90u"},
             {wkStart:17,wkEnd:20, dose:"4mg",   draw:"120u"},
           ]},
-         {text:"TB-500 — 2–2.5mg",      type:"pen",     recon:"10mg vial + 3ml BAC → 3.33mg/ml",  drawLow:"60u",  drawHigh:"75u", days:["Mon","Wed"]},
+         {text:"TB-500 — 5mg",           type:"pen",     recon:"10mg vial + 2ml BAC → 5mg/ml",     drawLow:"1ml",  drawHigh:"1ml", days:["Mon","Wed"]},
        ], note:"Each in its own pen. Never blend Retatrutide or TB-500 with anything."},
       {id:"evening", time:"8:00 PM", label:"Evening Injections", icon:"sunset", color:C.violet,
        items:[
-         {text:"Tesamorelin — 1–2mg",   type:"pen",     recon:"5mg vial + 3ml BAC → 1.67mg/ml",  drawLow:"60u",  drawHigh:"120u"},
+         {text:"Tesamorelin — 2mg",      type:"pen",     recon:"5mg vial + 2.5ml BAC → 2mg/ml",   drawLow:"1ml",  drawHigh:"1ml"},
          {text:"Ipamorelin — 200–300mcg",type:"pen",    recon:"10mg vial + 3ml BAC → 3.33mg/ml", drawLow:"6u",   drawHigh:"9u"},
          {text:"DSIP — 100–200mcg",     type:"pen",     recon:"5mg vial + 3ml BAC → 1.67mg/ml",  drawLow:"6u",   drawHigh:"12u"},
        ], note:"3 separate pens. All require 2–3 hr fasted window. NAC + Astragalus oral alongside."},
       {id:"pre-sleep", time:"10:00 PM", label:"Pre-Sleep Injections", icon:"sleep", color:C.sleep,
        items:[
          {text:"5-Amino-1MQ — 25mg (dose 2/2)",type:"syringe", recon:"50mg vial + 1ml BAC → 50mg/ml", drawLow:"0.5ml", drawHigh:"0.5ml", note:"Pairs with Apigenin oral — full NAD+ double-block (NNMT + CD38)"},
-         {text:"Epithalon — 5–10mg", note:"Syringe | Recon: 10mg vial + 2ml BAC → 5mg/ml | Draw 1–2ml | 10-day cycle only"},
+         {text:"Epithalon — 5–10mg", type:"syringe", note:"Syringe | Recon: 10mg vial + 2ml BAC → 5mg/ml | Draw 1–2ml | 10-day cycle only"},
        ],
        note:"Standalone syringes. 5-Amino-1MQ + Apigenin oral = full NAD+ stack. Epithalon: 10-day cycle only."},
     ];
@@ -1021,74 +1030,77 @@
     const DAILY = [
       { time:"5:30 AM", label:"Pre-Training — Fasted", icon:"inject", color:C.green, timeHour:5,
         weekendTime:"8:00 AM", weekendHour:8, weekendLabel:"Morning Blend — Fasted",
-        blend:"Mots-c syringe + Selank pen (separate). L-Carnitine 0.5ml syringe (dose 1 of 2 — repeat at post-train).",
+        blend:null,
         items:[
-          {name:"Selank",dose:"100–200mcg",method:"Pen",purpose:"Cortisol modulation — BDNF support, reduces training stress",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
-          {name:"Mots-c",dose:"5mg",method:"Syringe",purpose:"AMPK activation — mitochondrial efficiency, primes fat oxidation",t:false,cycle:{type:"daily"}},
-          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — shuttles mobilized fatty acids into mitochondria during peak fasted lipolysis window",t:false,cycle:{type:"daily"}},
-          {name:"Alpha-GPC",dose:"300–600mg",method:"Oral",purpose:"Choline precursor — acetylcholine for mind-muscle connection + minor GH pulse stimulus. Synergizes with Selank for cognitive sharpness during fasted training",t:false,cycle:{type:"daily"}},
+          {name:"Selank",dose:"100–200mcg",method:"Pen",purpose:"Cortisol modulator — stops fasted training from blunting the morning stack. Weekdays only",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — tolerance prevention"}},
+          {name:"Mots-c",dose:"5mg",method:"Syringe",purpose:"Activates AMPK at cellular level — restores metabolic flexibility and primes fat oxidation",t:false,cycle:{type:"daily"}},
+          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — shuttles free fatty acids across the mitochondrial membrane. Without it, AOD mobilizes fat that never gets burned",t:false,cycle:{type:"daily"}},
+          {name:"Alpha-GPC",dose:"300–600mg",method:"Oral",purpose:"Choline for mind-muscle connection + minor GH pulse stimulus",t:false,cycle:{type:"daily"}},
         ]},
       { time:"6:00 AM", label:"Training — Fasted", icon:"train", color:C.amber, timeHour:6, blend:null,
         weekendSkip:false, weekendTime:"8:30 AM", weekendHour:8.5, weekendLabel:"Electrolytes — Fasted",
         items:[
-          {name:"Electrolyte Cocktail",dose:"5g Na / 1g K / 500mg Mg per L",method:"Drink",purpose:"These peptides act as diuretics — if you're flat and weak it's a mineral deficiency, not a calorie deficiency",t:true,cycle:{type:"daily"}},
+          {name:"Electrolyte Cocktail",dose:"5g Na / 1g K / 500mg Mg per L",method:"Drink",purpose:"Peptides act as diuretics — if you're flat and weak, it's a mineral deficiency, not a calorie deficiency",t:true,cycle:{type:"daily"}},
         ]},
       { time:"7:30 AM", label:"Post-Training — Before Coffee", icon:"sun", color:C.amber, timeHour:8,
         weekendTime:"9:00 AM", weekendHour:9, weekendLabel:"Post-Blend — Still Fasted",
-        blend:"AOD-9604 pen — fasted only. BPC-157, KPV, GHK-Cu pens — standalone. 5-Amino-1MQ syringe — standalone. NAC + Astragalus oral.",
+        blend:null,
         items:[
-          {name:"AOD-9604",dose:"300mcg",method:"Pen",purpose:"Direct lipolysis — maximized fasted, before coffee insulin spike",t:false,cycle:{type:"daily"}},
-          {name:"BPC-157",dose:"500mcg",method:"Pen",purpose:"Gut integrity, tissue repair, GH receptor interaction",t:false,cycle:{type:"weeks",on:6,off:3,note:"6 wks on / 3 wks off"}},
-          {name:"KPV",dose:"500mcg–1mg",method:"Pen",purpose:"NF-kB inhibitor — gut lining protection, GI support on Retatrutide",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
-          {name:"GHK-Cu",dose:"2mg",method:"Pen",purpose:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory, skin and connective tissue regeneration",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
-          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — NNMT inhibitor, NAD+ preservation and fat cell reduction. Post-train metabolic window maximizes AMPK synergy with Mots-c",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
-          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — continues fatty acid shuttling into mitochondria during post-train metabolic window",t:false,cycle:{type:"daily"}},
-          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — liver protection, visceral fat senescence",t:true,cycle:{type:"daily"}},
-          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Kidney protection, immune support, telomerase activation",t:true,cycle:{type:"daily"}},
+          {name:"AOD-9604",dose:"300mcg",method:"Pen",purpose:"C-terminal GH fragment — triggers direct lipolysis without IGF-1 elevation. Fasted window only",t:false,cycle:{type:"daily"}},
+          {name:"BPC-157",dose:"500mcg",method:"Pen",purpose:"Gut and tissue repair — interacts with GH receptors directly. Non-negotiable foundation alongside TRT",t:false,cycle:{type:"daily",note:"Loading phase (daily) + maintenance — non-negotiable foundation alongside TRT"}},
+          {name:"KPV",dose:"500mcg–1mg",method:"Pen",purpose:"NF-kB inhibitor — blocks gut inflammation at the source. Lets Retatrutide reach dose without GI taper",t:false,cycle:{type:"weeks",on:10,off:4,note:"10 wks on / 4 wks off"}},
+          {name:"GHK-Cu",dose:"2mg",method:"Pen",purpose:"Activates collagen synthesis, remodels connective tissue, anti-fibrotic effects throughout the body",t:false,cycle:{type:"weeks",on:6,off:4,note:"6 wks on / 4 wks off"}},
+          {name:"Thymosin Alpha-1",dose:"1.6mg",method:"Syringe",purpose:"Immune recalibration — reduces CRP and IL-6 by up to 40%. T-cell restoration. Non-negotiable on long cycles",t:false,cycle:{type:"weekdays",note:"3–5x weekly — run Mon/Wed/Fri with post-train blend"}},
+          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 1/2 — NNMT inhibitor, preserves NAD+ in fat cells and shrinks adipocytes. Pairs with Apigenin at pre-sleep for full NAD+ block",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"L-Carnitine",dose:"300mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — sustains fatty acid oxidation through the post-train window",t:false,cycle:{type:"daily"}},
+          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — neutralizes oxidative stress as visceral fat breaks down at accelerated rates",t:true,cycle:{type:"daily"}},
+          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Maintains kidney filtration rate under high protein + peptide load. Renal protection layer most people skip",t:true,cycle:{type:"daily"}},
         ]},
       { time:"9:00–10:00 AM", label:"First Coffee", icon:"coffee", color:C.amber, timeHour:9, blend:null,
         weekendTime:"10:00 AM", weekendHour:10,
         items:[
-          {name:"Vitamin D3 + K2",dose:"10,000 IU",method:"With coffee",purpose:"Maintains testosterone production during a caloric deficit — fat-soluble, take with any fat source",t:false,cycle:{type:"daily"}},
+          {name:"Vitamin D3 + K2",dose:"10,000 IU",method:"With coffee",purpose:"Supports testosterone synthesis during caloric deficit — fat-soluble, take with any fat source",t:false,cycle:{type:"daily"}},
         ]},
       { time:"Meal 1", label:"Break Fast (Protein + Fiber)", icon:"meal", color:C.teal, timeHour:12, blend:null,
         items:[
-          {name:"TUDCA",dose:"250–500mg",method:"With meal",purpose:"Essential for bile flow — prevents liver sluggishness during rapid fat loss",t:true,cycle:{type:"daily"}},
-          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Lowers systemic inflammation — prevents cortisol belly",t:true,cycle:{type:"daily"}},
-          {name:"P-5-P (Active B6)",dose:"50–100mg",method:"With meal",purpose:"Keeps prolactin in check — high prolactin causes water retention and a soft look",t:true,cycle:{type:"daily"}},
-          {name:"Methylfolate (5-MTHF)",dose:"400–800mcg",method:"With meal",purpose:"Active folate — methylation cycle, homocysteine clearance, neurotransmitter synthesis. Stacks with P-5-P as co-methylation factors",t:false,cycle:{type:"daily"}},
-          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
+          {name:"TUDCA",dose:"250–500mg",method:"With meal",purpose:"Bile acid — keeps ALT/AST clean on TRT + peptides long-term. Not optional on a 20-week cycle",t:true,cycle:{type:"daily"}},
+          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Suppresses hs-CRP surge as visceral fat breaks down — prevents inflammation from becoming cortisol belly",t:true,cycle:{type:"daily"}},
+          {name:"P-5-P (Active B6)",dose:"50–100mg",method:"With meal",purpose:"Natural dopamine agonist — keeps prolactin suppressed without pharmaceutical intervention",t:true,cycle:{type:"daily"}},
+          {name:"Methylfolate (5-MTHF)",dose:"400–800mcg",method:"With meal",purpose:"Active folate — methylation cycle, homocysteine clearance, neurotransmitter synthesis",t:false,cycle:{type:"daily"}},
+          {name:"Boron",dose:"10mg",method:"With meal",purpose:"Reduces SHBG within 7 days — more free testosterone available without touching your dose",t:false,cycle:{type:"daily"}},
+          {name:"DIM",dose:"200–400mg",method:"With meal",purpose:"Shifts estrogen metabolism toward the favorable pathway — first line of defense before considering an AI",t:false,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Breaks protein down before it ferments — stops the sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"Meal 2", label:"Dinner (Carbs + Protein)", icon:"meal", color:C.teal, timeHour:17, blend:null,
         items:[
-          {name:"Dihydroberberine",dose:"200mg",method:"With meal",purpose:"Potent GDA — forces glucose into muscle not fat, counters GH-driven insulin resistance",t:true,cycle:{type:"daily"}},
-          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Second dose — split across meals for better absorption and sustained anti-inflammatory effect",t:true,cycle:{type:"daily"}},
-          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Prevents food sitting too long in the gut — stops sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
+          {name:"Dihydroberberine",dose:"200mg",method:"With meal",purpose:"Potent GDA — forces glucose into muscle not fat, directly counters GH-driven insulin resistance",t:true,cycle:{type:"daily"}},
+          {name:"Omega-3 (High EPA)",dose:"2g EPA/DHA",method:"With meal",purpose:"Suppresses hs-CRP surge as visceral fat breaks down — prevents inflammation from becoming cortisol belly",t:true,cycle:{type:"daily"}},
+          {name:"Digestive Enzymes",dose:"2 caps",method:"With meal",purpose:"Breaks protein down before it ferments — stops the sulfur burps from Retatrutide GI load",t:false,cycle:{type:"daily"}},
         ]},
       { time:"2–3 hrs After Dinner", label:"Evening Blend", icon:"sunset", color:C.violet, timeHour:20,
-        blend:blendNote("evening"),
+        blend:null,
         items:[
-          {name:"Tesamorelin",dose:"1–2mg",method:"Pen",purpose:"GHRH analog — clinically validated visceral fat, nocturnal GH pulse",t:false,cycle:{type:"daily"}},
-          {name:"Ipamorelin",dose:"200–300mcg",method:"Pen",purpose:"GHRP — initiates GH pulse without cortisol or prolactin spike",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
-          {name:"DSIP",dose:"100–200mcg",method:"Pen",purpose:"Delta sleep inducing peptide — increases slow wave sleep depth",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
-          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Second daily dose — evening glutathione, liver antioxidant",t:true,cycle:{type:"daily"}},
-          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Second daily dose — kidney protection, telomere support",t:true,cycle:{type:"daily"}},
+          {name:"Tesamorelin",dose:"2mg",method:"Pen",purpose:"Targets visceral fat through GH pulse optimization — lower visceral fat means less testosterone converts to estrogen",t:false,cycle:{type:"daily"}},
+          {name:"Ipamorelin",dose:"200–300mcg",method:"Pen",purpose:"Precision GH amplifier — fires the nocturnal GH pulse without spiking cortisol or prolactin. Weekdays only",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — preserves pulsatile GH response"}},
+          {name:"DSIP",dose:"100–200mcg",method:"Pen",purpose:"Deepens slow-wave sleep — the exact phase Tesamorelin fires in. Physically gated by magnesium availability",t:false,cycle:{type:"weeks",on:3,off:1,note:"3 wks on / 1 wk off — prevents efficacy drop"}},
+          {name:"NAC",dose:"500mg",method:"Oral",purpose:"Glutathione precursor — neutralizes oxidative stress as visceral fat breaks down at accelerated rates",t:true,cycle:{type:"daily"}},
+          {name:"Astragalus",dose:"1500mg",method:"Oral",purpose:"Maintains kidney filtration rate under high protein + peptide load. Renal protection layer most people skip",t:true,cycle:{type:"daily"}},
         ]},
       { time:"30–60 Min Before Bed", label:"Pre-Sleep", icon:"sleep", color:C.sleep, timeHour:22,
-        blend:blendNote("pre-sleep"),
+        blend:null,
         items:[
-          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — pairs with Apigenin oral for full NAD+ double-block (NNMT + CD38 inhibition). Overnight fat oxidation support",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
-          {name:"Epithalon",dose:"5–10mg",method:"Syringe",purpose:"Pineal restoration, telomere support",t:false,cycle:{type:"fixed",onDays:10,offDays:80,note:"10 days on → 80 days off"}},
-          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ",t:false,cycle:{type:"daily"}},
-          {name:"Myo-Inositol",dose:"2–4g",method:"Oral",purpose:"Insulin sensitizer + cortisol modulator — overnight glucose homeostasis, blunts morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning",t:false,cycle:{type:"daily"}},
-          {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for gut purposes",t:false,cycle:{type:"daily"}},
+          {name:"5-Amino-1MQ",dose:"25mg (0.5ml)",method:"Syringe",purpose:"Dose 2/2 — hits NAD+ from both ends with Apigenin (NNMT + CD38 inhibition). Overnight fat oxidation",t:false,cycle:{type:"weekdays",note:"5 on / 2 off — standard NNMT protocol"}},
+          {name:"Epithalon",dose:"5–10mg",method:"Syringe",purpose:"Restores pineal function — telomere elongation, circadian rhythm optimization. Russian longevity protocol. Twice yearly",t:false,cycle:{type:"fixed",onDays:10,offDays:170,note:"10 days on → 80 days off — run twice yearly only"}},
+          {name:"Apigenin",dose:"50mg",method:"Oral",purpose:"CD38 inhibitor — prevents systemic NAD+ breakdown. Pairs with 5-Amino-1MQ for full NAD+ double-block",t:false,cycle:{type:"daily"}},
+          {name:"Myo-Inositol",dose:"2–4g",method:"Oral",purpose:"Insulin sensitizer — overnight glucose homeostasis, blunts morning cortisol spike",t:false,cycle:{type:"daily"}},
+          {name:"Magnesium Citrate",dose:"400–600mg",method:"Oral",purpose:"Gates slow-wave sleep depth — DSIP can't work without it. Also prevents Retatrutide constipation",t:false,cycle:{type:"daily"}},
           {name:"Melatonin",dose:"0.5–1mg",method:"Oral",purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse",t:false,cycle:{type:"daily"}},
         ]},
     ];
     const SUPPLIES = [
       {item:"Luer Lock Syringe",spec:"1ml barrel",use:"Primary syringe — screw-on needle allows safe swapping between vials"},
       {item:"Draw Needle",spec:"21g × 1\"",use:"Drawing from vials only — swap before injecting to stay sharp"},
-      {item:"Injection Needle",spec:"29–30g × 0.5\"",use:"Fresh needle every injection — clean, painless SubQ"},
+      {item:"Injection Needle",spec:"32g × 0.5\"",use:"Fresh needle every injection — finer gauge means less trauma and virtually painless SubQ"},
       {item:"Alcohol Swabs",spec:"Sterile",use:"Wipe vial tops before every draw; injection site before/after"},
       {item:"Sharps Container",spec:"1–2 quart",use:"Dispose all needles safely — never recap used needles"},
       {item:"Bacteriostatic Water",spec:"Sterile BacWater",use:"Reconstituting all lyophilized (freeze-dried) peptide vials"},
@@ -1099,33 +1111,33 @@
       {name:"Electrolytes",dose:"5g Na / 1g K / 500mg Mg",timing:"Daily — especially training days",cat:"Performance",t:true,
        purpose:"These peptides act as diuretics. If you're flat and weak, it's a mineral deficiency — not a calorie deficiency."},
       {name:"NAC",dose:"600mg–1200mg",timing:"AM + Evening",cat:"Antioxidant",t:true,
-       purpose:"Precursor to Glutathione — protects cells from oxidative stress during aggressive fat mobilization."},
+       purpose:"Glutathione precursor — neutralizes oxidative stress as visceral fat breaks down at accelerated rates"},
       {name:"Astragalus",dose:"3000mg–4000mg",timing:"AM + Evening",cat:"Kidney Shield",t:true,
-       purpose:"Specifically maintains GFR (kidney filtration rate) when consuming high protein and running multiple peptides."},
+       purpose:"Maintains kidney filtration rate under high protein + peptide load. Renal protection layer most people skip"},
       {name:"TUDCA",dose:"250mg–500mg",timing:"Meal 1",cat:"Liver Shield",t:true,
-       purpose:"Essential for bile flow and preventing liver sluggishness during rapid fat loss."},
+       purpose:"Bile acid — keeps ALT/AST clean on TRT + peptides long-term. Not optional on a 20-week cycle"},
       {name:"Omega-3 (High EPA)",dose:"4g daily",timing:"Meals 1 + 2",cat:"Anti-Inflam",t:true,
-       purpose:"Lowers systemic inflammation to prevent cortisol belly."},
+       purpose:"Suppresses hs-CRP surge as visceral fat breaks down — prevents inflammation from becoming cortisol belly"},
       {name:"P-5-P (Active B6)",dose:"50mg–100mg",timing:"Meal 1",cat:"Hormones",t:true,
-       purpose:"Keeps Prolactin in check. High prolactin causes water retention and a soft look."},
+       purpose:"Natural dopamine agonist — keeps prolactin suppressed without pharmaceutical intervention"},
       {name:"Vitamin D3 + K2",dose:"10,000 IU D3",timing:"With fat-containing meal",cat:"Hormonal",t:false,
-       purpose:"Maintains testosterone production during a caloric deficit."},
+       purpose:"Supports testosterone synthesis during caloric deficit — fat-soluble, take with any fat source"},
       {name:"Digestive Enzymes",dose:"Protease-heavy formula",timing:"With every meal",cat:"Gut Health",t:false,
-       purpose:"Prevents food from sitting too long in the gut — stops sulfur burps caused by Retatrutide GI load."},
+       purpose:"Breaks protein down before it ferments — stops the sulfur burps from Retatrutide GI load"},
       {name:"Magnesium Citrate",dose:"400mg–600mg",timing:"Pre-sleep",cat:"Sleep / Gut",t:false,
-       purpose:"Prevents peptide-induced constipation and maintains bowel motility. Better absorbed than Glycinate for this purpose."},
+       purpose:"Gates slow-wave sleep depth — DSIP can't work without it. Also prevents Retatrutide constipation"},
       {name:"Dihydroberberine",dose:"200mg",timing:"Meal 2",cat:"Metabolic",t:true,
-       purpose:"Potent GDA — forces glucose into muscle not fat, directly countering GH-driven insulin resistance."},
+       purpose:"Potent GDA — forces glucose into muscle not fat, directly counters GH-driven insulin resistance"},
       {name:"Apigenin",dose:"50mg",timing:"Pre-sleep",cat:"Sleep/NAD+",t:false,
-       purpose:"Mild anxiolytic, CD38 inhibitor — preserves NAD+ alongside 5-Amino-1MQ."},
+       purpose:"CD38 inhibitor — prevents systemic NAD+ breakdown. Pairs with 5-Amino-1MQ for full NAD+ double-block"},
       {name:"Melatonin",dose:"0.5–1mg",timing:"90min pre-sleep",cat:"Sleep onset",t:false,
-       purpose:"Low dose only — higher doses fragment sleep and blunt the Tesamorelin + Ipamorelin GH pulse."},
+       purpose:"Low dose only — higher doses fragment sleep and blunt the nocturnal GH pulse"},
       {name:"Alpha-GPC",dose:"300–600mg",timing:"Pre-Train (5:30 AM)",cat:"Cognitive",t:false,
-       purpose:"Choline precursor — raises acetylcholine for mind-muscle connection and cognitive sharpness during fasted training. Also stimulates a minor GH pulse, synergizing with the morning injection window."},
+       purpose:"Choline for mind-muscle connection + minor GH pulse stimulus"},
       {name:"Methylfolate (5-MTHF)",dose:"400–800mcg",timing:"Meal 1",cat:"Methylation",t:false,
-       purpose:"Active folate — supports the methylation cycle, clears homocysteine, and drives neurotransmitter synthesis. Co-factor alongside P-5-P at Meal 1."},
+       purpose:"Active folate — methylation cycle, homocysteine clearance, neurotransmitter synthesis"},
       {name:"Myo-Inositol",dose:"2–4g",timing:"Pre-Sleep",cat:"Metabolic",t:false,
-       purpose:"Insulin sensitizer and cortisol modulator — supports overnight glucose homeostasis and blunts the morning cortisol spike. Synergizes with Dihydroberberine for glucose partitioning into muscle."},
+       purpose:"Insulin sensitizer — overnight glucose homeostasis, blunts morning cortisol spike"},
     ];
 
     const PHASES = [
@@ -1143,7 +1155,11 @@
       {marker:"ALT / AST",freq:"Every 8 wks",target:"< 30 U/L",flag:"> 50 U/L",t:true},
       {marker:"Free T3",freq:"Every 8 wks",target:"3.5–4.2 pg/mL",flag:"< 3.0 pg/mL",t:true},
       {marker:"Cortisol (AM)",freq:"Every 8 wks",target:"Normal AM range",flag:"Elevated",t:false},
-      {marker:"Testosterone / Estradiol",freq:"Per TRT protocol",target:"TRT optimized",flag:"E2 out of range",t:false},
+      {marker:"Testosterone / Estradiol",freq:"Per TRT protocol",target:"800–1100 / 20–30 pg/mL",flag:"E2 out of range",t:false},
+      {marker:"DHT",freq:"Every 8 wks",target:"400–700 pg/mL",flag:"Out of range",t:false},
+      {marker:"Pregnenolone",freq:"Every 8 wks",target:"100–180 mcg/dL",flag:"Below range",t:false},
+      {marker:"Progesterone",freq:"Every 8 wks",target:"0.5–1.5 ng/mL",flag:"Out of range",t:false},
+      {marker:"HOMA-IR",freq:"Every 8 wks",target:"Under 1.5",flag:"Above 1.5",t:true},
       {marker:"DEXA / InBody",freq:"Every 8–12 wks",target:"Fat↓ LBM stable",flag:"LBM loss",t:false},
       {marker:"Resting Heart Rate",freq:"Daily self-monitor",target:"Baseline",flag:"+15 BPM from base",t:true},
       {marker:"CMP (Metabolic Panel)",freq:"Every 8 wks",target:"All normal",flag:"Kidney markers↑",t:false},
@@ -1254,7 +1270,6 @@
     const PEPTIDE_LIST = ["AOD-9604","BPC-157","DSIP","Epithalon","Ipamorelin","KPV","L-Carnitine","Mots-c","Retatrutide","Selank","TB-500","Tesamorelin","5-Amino-1MQ","Sermorelin"];
 
     const TABS = [
-      {id:"ozempic",  label:"Ozempic",     icon:"inject"},
       {id:"daily",    label:"Today",       icon:"today"},
       {id:"stack", label:"Stack",       icon:"blending"},
       {id:"timeline",  label:"Timeline",    icon:"cycle"},
@@ -1400,7 +1415,6 @@
     };
     const HIGH_FROM_START = new Set(["TUDCA","KPV","Magnesium Citrate","Digestive Enzymes"]);
     const PRIMARY_TABS = [
-      {id:"ozempic",  label:"Ozempic",    icon:"inject"},
       {id:"daily",    label:"Today",      icon:"today"},
       {id:"diet",     label:"Diet",       icon:"meal"},
       {id:"stack", label:"Stack",      icon:"blending"},
@@ -1454,7 +1468,7 @@
       <div style={{fontSize:13,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:10,...style}}>{children}</div>
     );
 
-    function InjectionTimer({ theme, chk={}, viewDay=0 }) {
+    function InjectionTimer({ theme, chk={}, viewDay=0, onNavigate }) {
       const t = theme || C;
       const [now, setNow] = useState(new Date());
       useEffect(() => { const ti = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(ti); }, []);
@@ -1495,8 +1509,17 @@
             <SectionLabel>NEXT INJECTION</SectionLabel>
             {enriched.map((s,i)=>{
               const isNext = s.label === nextWin.label;
+              const isClickable = (s.isActive || isNext) && onNavigate && s.blockIdx != null;
               return (
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                <div key={i} onClick={isClickable ? () => onNavigate(s.blockIdx) : undefined}
+                  style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,
+                    cursor:isClickable?"pointer":"default",
+                    WebkitTapHighlightColor:"transparent",
+                    borderRadius:10,
+                    padding:"0 4px",
+                    margin:"0 -4px 10px",
+                    transition:"background 0.15s",
+                  }}>
                   <div style={{width:32,height:32,borderRadius:9,background:`${s.color}18`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <Icon name={s.icon} size={15} color={s.color}/>
                   </div>
@@ -1517,6 +1540,7 @@
                     </div>
                   </div>
                   <span style={{fontSize:13,color:"var(--text-muted)",flexShrink:0,minWidth:28,textAlign:"right"}}>{s.done}/{s.total}</span>
+                  {isClickable && <span style={{fontSize:14,color:"var(--accent)",flexShrink:0,opacity:0.7}}>›</span>}
                 </div>
               );
             })}
@@ -1765,8 +1789,9 @@
       {name:"Mots-c",     desc:"Mitochondrial peptide — AMPK activation, metabolic flexibility",  recDose:"5",     recUnit:"mg"},
       {name:"Retatrutide",desc:"Triple agonist GLP-1/GIP/Glucagon — appetite + systemic fat loss",recDose:"0.5",   recUnit:"mg"},
       {name:"Selank",     desc:"Cortisol modulation, BDNF support, reduces training stress",      recDose:"200",   recUnit:"mcg"},
+      {name:"Thymosin Alpha-1", desc:"Immune recalibration, CRP/IL-6 reduction, T-cell restoration, cytokine balance", recDose:"1.6",   recUnit:"mg"},
       {name:"Sermorelin", desc:"GHRH analog — GH pulse stimulation, backup Tesamorelin",          recDose:"300",   recUnit:"mcg"},
-      {name:"TB-500",     desc:"Systemic anti-inflammatory, connective tissue repair",             recDose:"2",     recUnit:"mg"},
+      {name:"TB-500",     desc:"Systemic anti-inflammatory, connective tissue repair",             recDose:"5",     recUnit:"mg"},
       {name:"Tesamorelin",desc:"GHRH analog — FDA-validated visceral fat, nocturnal GH pulse",    recDose:"2",     recUnit:"mg"},
       {name:"5-Amino-1MQ",desc:"NNMT inhibitor — NAD+ preservation, reduces fat cell size",       recDose:"50",    recUnit:"mg"},
       {name:"GHK-Cu",      desc:"Copper peptide — collagen remodeling, tissue repair, anti-inflammatory", recDose:"2",     recUnit:"mg"},
@@ -2700,7 +2725,7 @@
               sortHour: sched.morning, type: "inject", key: "daily-merged",
               label: "Morning Blend — Fasted", time: fmtHour(sched.morning),
               color: C.green, icon: "inject",
-              blend: "Morning injections: Mots-c + L-Carnitine (syringe), Selank pen. Then AOD pen, BPC-157 + KPV + GHK-Cu + 5-Amino-1MQ — each standalone.",
+              blend: null,
               items: [...mergedItems, ...extraItems], bi: 0,
             });
           [6, 7].forEach(bi => {
@@ -2997,7 +3022,16 @@
           <div style={{padding:"0 16px"}}>
             {renderDaySelector()}
 
-            {isToday&&<><ReadinessScore chk={chk} viewDay={viewDay} theme={T}/><InjectionTimer chk={chk} viewDay={viewDay} theme={T}/></>}
+            {isToday&&<><ReadinessScore chk={chk} viewDay={viewDay} theme={T}/><InjectionTimer chk={chk} viewDay={viewDay} theme={T} onNavigate={(blockIdx)=>{
+                const cardId = `today-daily-${blockIdx}`;
+                // Open the card
+                setOpenCards(prev => { const next = new Set(prev); next.add(cardId); return next; });
+                // Scroll to it after a tick
+                setTimeout(()=>{
+                  const el = document.getElementById(`card-daily-${blockIdx}`);
+                  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+                },80);
+              }}/></>}
 
             {isSunday && (
               <div style={{background:"var(--accent-10)",border:"1px solid rgba(245,158,11,0.28)",borderRadius:12,padding:"11px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
@@ -3017,84 +3051,6 @@
             ))}
             </div>
 
-          </div>
-        );
-      };
-
-      const renderOzempic = () => {
-        const ozSupps = [
-          {name:"Vitamin D3 + K2",   dose:"10,000 IU", timing:"With Meal 1",      note:"Hormonal support in deficit",     caps:"1 softgel"},
-          {name:"TUDCA",             dose:"500mg",     timing:"With Meal 1",      note:"Liver + bile support",            caps:"2 caps"},
-          {name:"Omega-3 (High EPA)",dose:"2g",        timing:"With Meal 1",      note:"Anti-inflammatory",               caps:"2 softgels"},
-          {name:"Dihydroberberine",  dose:"200mg",     timing:"With carb meal",   note:"Counters GLP-1 insulin resistance",caps:"1 cap"},
-          {name:"Digestive Enzymes", dose:"2 caps",    timing:"With every meal",  note:"GI prep for GLP-1 — prevents sulfur burps", caps:"2 caps"},
-          {name:"NAC",               dose:"500mg",     timing:"AM + Evening",     note:"Oxidative stress from fat loss",  caps:"1 cap × 2"},
-          {name:"Magnesium Citrate", dose:"420mg",     timing:"Pre-sleep",        note:"Constipation prevention",         caps:"1 cap"},
-        ];
-        const todayKey = new Date().toISOString().split("T")[0];
-        const allDone = ozSupps.every((_,i) => !!chk[`${todayKey}-ozsupp-${i}`]);
-        const doneCount = ozSupps.filter((_,i) => !!chk[`${todayKey}-ozsupp-${i}`]).length;
-
-        return (
-          <div style={{paddingBottom:24}}>
-            {/* Header card */}
-            <div style={{background:"var(--accent-10)",border:"1px solid rgba(245,158,11,0.25)",borderRadius:16,padding:"16px",marginBottom:16}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:700,color:"var(--text-main)"}}>Pre-Protocol Phase</div>
-                  <div style={{fontSize:13,color:"var(--text-muted)",marginTop:2}}>Ozempic 0.5mg/wk · Foundation supps</div>
-                </div>
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontSize:15,fontWeight:700,color:"var(--accent)",lineHeight:1}}>{doneCount}/{ozSupps.length}</div>
-                  <div style={{fontSize:11,color:"var(--text-muted)",marginTop:2}}>today</div>
-                </div>
-              </div>
-              <div style={{height:4,background:"var(--card-border)",borderRadius:2,overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:2,background:allDone?"var(--accent)":"var(--accent)",width:`${(doneCount/ozSupps.length)*100}%`,transition:"width 0.4s"}}/>
-              </div>
-            </div>
-
-            {/* Why these 7 */}
-            <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:8}}>DAILY CHECKLIST</div>
-            <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,overflow:"hidden",marginBottom:16}}>
-              {ozSupps.map((s,i) => {
-                const sk = `${todayKey}-ozsupp-${i}`;
-                const done = !!chk[sk];
-                return (
-                  <div key={i} onClick={()=>{const wasChecked=!!chk[sk];check(sk);adjustSuppInv(s.name,s.dose,!wasChecked);}} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:i<ozSupps.length-1?"1px solid var(--card-border)":"none",cursor:"pointer",background:done?"rgba(0,122,255,0.04)":"transparent",WebkitTapHighlightColor:"transparent"}}>
-                    <div style={{width:22,height:22,borderRadius:"50%",border:`2px solid ${done?"var(--accent)":"var(--card-border)"}`,background:done?"var(--accent)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s cubic-bezier(0.25,0.46,0.45,0.94)"}}>
-                      {done&&<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:s.note?3:0}}>
-                        <span style={{fontSize:13,fontWeight:500,color:done?"var(--text-muted)":"var(--text-main)",textDecoration:done?"line-through":"none",flex:1,minWidth:0}}>{s.name}</span>
-                        <span style={{fontSize:11,color:"var(--text-main)",background:"var(--accent-12)",padding:"2px 8px",borderRadius:20,fontWeight:600,flexShrink:0}}>{s.dose}</span>
-                        {s.caps&&<span style={{fontSize:11,color:"var(--text-main)",background:"var(--card-border)",padding:"2px 8px",borderRadius:20,flexShrink:0}}>{s.caps}</span>}
-                      </div>
-                      {s.note&&<div style={{fontSize:12,color:"var(--text-muted)"}}>{s.note}</div>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Ozempic injection reminder */}
-            <div style={{fontSize:11,fontWeight:700,color:"var(--text-muted)",letterSpacing:"0.08em",marginBottom:8}}>WEEKLY INJECTION</div>
-            <div style={{background:"var(--card-bg)",border:"1px solid var(--card-border)",borderRadius:16,padding:"14px 16px"}}>
-              <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <Icon name="inject" size={18} color="var(--text-muted)"/>
-                </div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600,color:"var(--text-main)"}}>Ozempic</div>
-                  <div style={{fontSize:13,color:"var(--text-muted)",marginTop:1}}>0.5mg · Weekly SubQ · Same day each week</div>
-                </div>
-                <span style={{fontSize:13,fontWeight:700,color:"var(--text-main)",background:"var(--accent-12)",padding:"4px 12px",borderRadius:20}}>0.5mg</span>
-              </div>
-              <div style={{fontSize:12,color:"var(--text-muted)",marginTop:10,paddingTop:10,borderTop:"1px solid var(--card-border)"}}>
-                This tab disappears once you tap Start Protocol in Settings — your foundation supps move into the main protocol at that point.
-              </div>
-            </div>
           </div>
         );
       };
@@ -3199,16 +3155,24 @@
                   <>
                     <Divider/>
                     <div style={{padding:"12px 16px 4px"}}>
-                      {bl.items.map((item,j)=>{
+                      {[...bl.items].sort((a,b)=>{
+                        const order = {pen:0,syringe:1};
+                        const ta = typeof a==="object"?a.type:null;
+                        const tb = typeof b==="object"?b.type:null;
+                        return (order[ta]??2)-(order[tb]??2);
+                      }).map((item,j,arr)=>{
                         const text = typeof item === "string" ? item : item.text;
+                        const type = typeof item === "object" ? item.type : null;
                         const days = typeof item === "object" ? item.days : null;
                         const itemNote = item.drawSchedule || item.drawLow ? getDrawNote(item) : (typeof item === "object" ? item.note : null);
                         const blendName = text.split(" — ")[0].trim();
                         return (
-                          <div key={j} style={{paddingBottom:10,borderBottom:j<bl.items.length-1?"1px solid var(--card-border)":"none",marginBottom:j<bl.items.length-1?10:4}}>
-                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div key={j} style={{paddingBottom:10,borderBottom:j<arr.length-1?"1px solid var(--card-border)":"none",marginBottom:j<arr.length-1?10:4}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
                               <div style={{width:6,height:6,borderRadius:"50%",background:bl.color,flexShrink:0}}/>
                               <span style={{fontSize:13,color:"var(--text-muted)",flex:1}}>{text}</span>
+                              {type==="pen"&&<span style={{fontSize:10,fontWeight:700,color:C.cyan,background:`${C.cyan}15`,padding:"1px 6px",borderRadius:20,flexShrink:0,letterSpacing:"0.04em"}}>PEN</span>}
+                              {type==="syringe"&&<span style={{fontSize:10,fontWeight:700,color:C.violet,background:`${C.violet}15`,padding:"1px 6px",borderRadius:20,flexShrink:0,letterSpacing:"0.04em"}}>SYR</span>}
                               {days&&days.map(d=>(
                                 <span key={d} style={{fontSize:11,fontWeight:700,color:bl.color,background:`${bl.color}18`,border:`1px solid ${bl.color}33`,padding:"2px 6px",borderRadius:8,letterSpacing:"0.04em",flexShrink:0}}>{d}</span>
                               ))}
@@ -4089,7 +4053,7 @@
               );
             };
 
-            const views = {ozempic:renderOzempic,daily:renderDaily,tools:renderTools,weekly:renderWeekly,stack:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
+            const views = {daily:renderDaily,tools:renderTools,weekly:renderWeekly,stack:renderBlending,supps:renderSynergy,cycle:renderCycle,synergy:renderSynergy,exit:renderExit,orders:renderOrders,diet:renderDiet,settings:renderSettings,timeline:renderTimeline,backup:()=><BackupTab theme={T}/>};
 
       // Bottom tab bar config
 
@@ -4178,8 +4142,7 @@
       const dateStr = now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
 
       return (
-        <div
-          style={{background:"transparent", minHeight:"100vh", color:TC.text, transition:"color 0.3s ease", overflowAnchor:"none"}}>
+        <div style={{background:"transparent", minHeight:"100vh", color:TC.text, transition:"color 0.3s ease", overflowAnchor:"none"}}>
 
           {/* Hero header — only on Today tab */}
           {tab === "daily" && !showMore && (
@@ -4240,7 +4203,7 @@
           )}
 
           {/* Non-Today tab header — fixed, scroll-aware, with back button */}
-          {tab !== "daily" && !showMore && !["diet","stack","ozempic"].includes(tab) && (
+          {tab !== "daily" && !showMore && !["diet","stack"].includes(tab) && (
             <ScrollHeader
               tab={tab}
               tabs={TABS}
@@ -4255,7 +4218,7 @@
           {!showMore && (
             tab === "daily" ? (
               <div style={{overflowAnchor:"none"}}>{views[tab]?.()}</div>
-            ) : ["diet","stack","ozempic"].includes(tab) ? (
+            ) : ["diet","stack"].includes(tab) ? (
               <div style={{padding:`calc(env(safe-area-inset-top) + 16px) 16px 16px`,overflowAnchor:"none"}}>
                 {views[tab]?.()}
               </div>
